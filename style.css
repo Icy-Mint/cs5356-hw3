@@ -6,10 +6,10 @@ body {
 }
 
 img {
-    width: 50vw;
-    height: auto;
+    width: 33.33vw;
+    height: 33.33vw;
     
-    
+    border-radius: 50%;  /* Makes image circular */
     object-fit: cover;
 
     border: 3px solid #333333;
