@@ -47,24 +47,21 @@ main {
 
 .welcome {
     width: 100%;
-    padding: 20px;
     background: white;
-    border-radius: 10px;
-    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    padding: 40px 10%; /* Add padding for spacing */
+    text-align: center;
+    border-bottom: 3px solid #ddd; /* Adds a subtle separation */
 }
 figure {
     margin: 0 auto;
     text-align: center;
 }
 
-.welcome img {
-    width: 250px;
-    height: auto;
-    border-radius: 50%;
-    object-fit: cover;
-    border: 3px solid #333333;
-    display: block;
+.welcome-content {
+    max-width: 1200px; /* Prevents overly wide text on large screens */
     margin: 0 auto;
+    font-size: 18px;
+    line-height: 1.6;
 }
 
 .service {
@@ -117,9 +114,12 @@ footer {
     header {
         height: 200px;
     }
+    .welcome {
+        padding: 30px 5%;
+    }
 
-    .welcome img {
-        width: 200px; /* Smaller on phones */
+    .welcome-content {
+        font-size: 16px;
     }
 
     .image-grid {
