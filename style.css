@@ -2,6 +2,7 @@ body {
     font-family: Arial, sans-serif;
     text-align: center;
     margin: 0;
+    padding: 0;
     background-color: #f4f4f4;
     display: flex;
     flex-direction: column;
@@ -10,11 +11,30 @@ body {
 header {
     width: 100%;
     padding: 20px;
-    background-color: #333;
-    color: white;
-    font-size: 24px;
+    height: 300px;
+    background-image: url("images/dynamic_graphs.jpg"); /* Background Image */
+    background-size: cover;
+    background-position: center;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+}
+/* Overlay for Text Visibility */
+header::before {
+    content: "";
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5); /* Dark Overlay */
 }
 
+header h1 {
+    position: relative;
+    color: white;
+    font-size: 32px;
+    z-index: 2;
+}
 main {
     width: 90%;
     max-width: 1200px;
@@ -37,34 +57,38 @@ figure {
     text-align: center;
 }
 
-img {
-    width: 33.33vw;
-    height: 33.33vw;
-    
-    border-radius: 50%;  /* Makes image circular */
+.welcome img {
+    width: 250px;
+    height: auto;
+    border-radius: 50%;
     object-fit: cover;
-
     border: 3px solid #333333;
-    display:block; 
+    display: block;
     margin: 0 auto;
 }
 
 .service {
     width: 100%;
+    padding: 20px;
+    background: white;
+    border-radius: 10px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
 }
 
 .image-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); /* ✅ Responsive Grid */
-    gap: 10px;
+    grid-template-columns: repeat(2, 1fr); /* Two Equal Columns */
+    gap: 20px;
     justify-content: center;
 }
 
 .image-grid img {
     width: 100%;
-    height: auto;
+    height: 250px; /* Ensures equal height */
     border-radius: 8px;
     object-fit: cover;
+    display: block;
+    margin: 10px auto;
 }
 
 figcaption {
@@ -74,23 +98,32 @@ figcaption {
 }
 
 footer {
-    margin-top: 50px;
+    width: 100%;
     padding: 20px;
     background-color: #333;
     color: white;
     font-size: 14px;
 }
+/* Mobile Responsiveness (Phones & Tablets) */
 @media screen and (max-width: 768px) {
-    img {
-        width: 50vw; /* Scale for smaller screens */
+    header {
+        height: 200px;
+    }
+
+    .welcome img {
+        width: 200px; /* Smaller on phones */
     }
 
     .image-grid {
-        grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); /* ✅ Adjust grid */
+        grid-template-columns: 1fr; /* Stack images on smaller screens */
+    }
+
+    .image-grid img {
+        height: 200px;
     }
 }
 
-/* Larger Screens (Over 1024px) */
+/* Large Screens (Desktops) */
 @media screen and (min-width: 1024px) {
     main {
         flex-direction: row;
