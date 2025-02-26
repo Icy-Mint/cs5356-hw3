@@ -151,28 +151,6 @@ footer {
         aspect-ratio: 16/9;
     }
 }
-
-/*  Mobile Responsiveness (Phones & Tablets) */
-@media screen and (max-width: 768px) {
-    header {
-      height: 200px;
-    }
-  
-    .welcome {
-      padding: 30px 5%;
-    }
-  
-    .welcome-content {
-      padding: 0 5%;
-      font-size: 16px;
-    }
-  
-    .graph-section {
-      width: 95%;
-      padding: 30px 2%;
-    }
-  }
-  
   /*  Large Screens (Desktops) */
   @media screen and (min-width: 1024px) {
     .graph-container {

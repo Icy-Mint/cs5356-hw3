@@ -59,10 +59,61 @@
                 </figure>
             </section>
         </div>
+        <section>
+            <h2>NYC Energy Usage Data</h2>
+            <button id="fetchDataBtn">Load NYC Energy Data</button>
+            <div id="results"></div>
+        </section>
+
     </main>
 
     <footer> 
         <p>&copy; 2024 SmartWatts. All rights reserved.</p>
     </footer>
+    <script>
+        const fetchDataBtn = document.getElementById('fetchDataBtn');
+        const resultsDiv = document.getElementById('results');
+  
+        fetchDataBtn.addEventListener('click', () => {
+          // Limit the results to 5 for brevity
+          const url = 'https://data.cityofnewyork.us/resource/hyij-8hr7.json?$limit=5';
+  
+          fetch(url)
+            .then(response => {
+              if (!response.ok) {
+                throw new Error(`Network response was not OK. Status: ${response.status}`);
+              }
+              return response.json();
+            })
+            .then(data => {
+              console.log('NYC Open Data (Energy) response:', data);
+  
+              let htmlOutput = '<h3>Sample NYC Building Data</h3>';
+  
+              data.forEach((building, idx) => {
+                const name = building.property_name || 'Unknown';
+                const borough = building.borough || 'Unknown';
+                const floorArea = building.total_gross_floor_area || 'N/A';
+                const eui = building.site_eui_kbtu_ft2 || 'N/A';
+  
+                htmlOutput += `
+                  <div style="margin: 1rem 0; padding: 1rem; border: 1px solid #ccc; border-radius: 6px;">
+                    <h4>Record #${idx + 1}</h4>
+                    <p><strong>Property Name:</strong> ${name}</p>
+                    <p><strong>Borough:</strong> ${borough}</p>
+                    <p><strong>Gross Floor Area (sq ft):</strong> ${floorArea}</p>
+                    <p><strong>Site EUI (kBtu/ft²):</strong> ${eui}</p>
+                  </div>
+                `;
+              });
+  
+              resultsDiv.innerHTML = htmlOutput;
+            })
+            .catch(error => {
+              console.error('Error fetching NYC data:', error);
+              resultsDiv.textContent = 'Unable to load NYC building data.';
+            });
+        });
+    </script>
 </body>
 </html>
