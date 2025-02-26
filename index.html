@@ -60,7 +60,7 @@
             </section>
         </div>
         <section>
-            <h2>NYC Energy Usage Data</h2>
+            <h2>NYC Energy Usage Data Benchmarking</h2>
             <button id="fetchDataBtn">Load NYC Energy Data</button>
             <div id="results"></div>
         </section>
@@ -76,7 +76,7 @@
   
         fetchDataBtn.addEventListener('click', () => {
           // Limit the results to 5 for brevity
-          const url = 'https://data.cityofnewyork.us/resource/hyij-8hr7.json?$limit=5';
+          const url = 'https://data.cityofnewyork.us/resource/5zyy-y8am.json?$limit=5';
   
           fetch(url)
             .then(response => {
