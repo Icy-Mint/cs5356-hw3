@@ -91,7 +91,7 @@ figure {
 .graph-section {
     width: 100%;
     max-width: 1200px; /* Adds space between sections */
-    margin: 40px 5%;
+   
     background: white;
     padding: 20px;
     border-radius: 10px;
@@ -102,7 +102,8 @@ figure {
 /*  Image Styling */
 .graph-section img {
     width: 100%; /* Make graphs stretch across the screen */
-    height: 400px; /* Fixed height to maintain uniformity */
+    height: auto; /* Fixed height to maintain uniformity */
+    aspect-ratio: 16/9; /* Ensures correct width-to-height ratio */
     object-fit: cover; /* Prevents distortion */
     border-radius: 8px;
     display: block;
@@ -138,12 +139,13 @@ footer {
     }
 
     .graph-section {
+        width: 95%;
         padding: 30px 2%;
     }
 
     .graph-section img {
-        max-width: 100%;
-        height: 300px; /* Adjust height for smaller screens */
+        height: auto;
+        aspect-ratio: 16/9;
     }
 }
 
