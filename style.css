@@ -103,6 +103,14 @@ main {
     border-radius: 8px;
     display: block;
     margin: 0 auto;
+    
+    filter: grayscale(50%);        /* 50% grayscale */
+    transition: filter 0.3s ease;  /* smooth transition of the filter */
+}
+
+/* Hover removes the grayscale */
+.graph-section img:hover {
+  filter: grayscale(0%);
 }
 
 figcaption {
