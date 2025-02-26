@@ -10,7 +10,7 @@ body {
 }
 header {
     width: 100%;
-    padding: 20px;
+    
     height: 300px;
     background-image: url("images/dynamic_graphs.jpg"); /* Background Image */
     background-size: cover;
@@ -46,12 +46,14 @@ main {
     padding: 20px;
 }
 
-.welcome {
+.welcome, .service {
     width: 100%;
     background: white;
-    padding: 40px 0; /* Add padding for spacing */
+    padding: 40px 0;
     text-align: center;
-    border-bottom: 3px solid #ddd; /* Adds a subtle separation */
+    border-bottom: 3px solid #ddd;
+    border-radius: 10px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
 }
 figure {
     margin: 0 auto;
@@ -67,14 +69,7 @@ figure {
     line-height: 1.6;
 }
 
-.service {
-    width: 100%;
-    text-align: center;
-    padding: 20px;
-    background: white;
-    border-radius: 10px;
-    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-}
+
 
 /*  Graphs Wrapper (For Side-by-Side Display) */
 .graph-container {
