@@ -15,7 +15,7 @@
     </header>
 
     <main>
-        
+        <!-- ================= Welcome Section ================= -->
         <section class="welcome">
             <div class="welcome-content" style="text-align: left;">
                 <p><strong>SmartWatts is a web-based platform for ESG-related energy data analysis. Our tool enables users to process both:</strong></p>
@@ -36,12 +36,12 @@
                 <p>- Try SmartWatts today!</p>
             </div>
         </section>   
-    
+        <!-- ================= Services Section ================= -->
         <section class="service">
             <h2>Services We Offer </h2>
         </section>
         
-
+        <!-- ================= Graphs Section ================= -->
         <div class="graph-container">
             <section class="graph-section">
                 <h3>Historic Energy Data Analysis</h3>
@@ -59,17 +59,69 @@
                 </figure>
             </section>
         </div>
+        <!-- ================= NYC Energy Usage Data ================= -->
         <section>
             <h2>NYC Energy Usage Data Benchmarking</h2>
             <button id="fetchDataBtn">Load NYC Energy Data</button>
             <div id="results"></div>
         </section>
-
+        <!-- ================= Contact Us Form (Mailto) ================= -->
+        <section style="margin-top: 2rem;">
+            <h2>Contact Us</h2>
+            <p>If you're interested in our services or have any questions, feel free to reach out!</p>
+            <!-- 
+              Using mailto: to open the user's default email client 
+              and send data as plain text.
+            -->
+            <form
+              action="mailto:szb759@hotmail.com?subject=Inquiry%20from%20SmartWatts"
+              method="post"
+              enctype="text/plain"
+              style="max-width: 400px; margin: 0 auto; text-align: left;"
+            >
+              <label for="userName" style="font-weight: bold;">Name</label><br>
+              <input
+                type="text"
+                id="userName"
+                name="Name"
+                required
+                style="width: 100%; margin-bottom: 1rem; padding: 8px; box-sizing: border-box;"
+              >
+      
+              <label for="userEmail" style="font-weight: bold;">Email</label><br>
+              <input
+                type="email"
+                id="userEmail"
+                name="Email"
+                placeholder="you@example.com"
+                required
+                style="width: 100%; margin-bottom: 1rem; padding: 8px; box-sizing: border-box;"
+              >
+      
+              <label for="userMessage" style="font-weight: bold;">Message</label><br>
+              <textarea
+                id="userMessage"
+                name="Message"
+                rows="6"
+                placeholder="Your message here..."
+                required
+                style="width: 100%; margin-bottom: 1rem; padding: 8px; box-sizing: border-box;"
+              ></textarea>
+      
+              <button
+                type="submit"
+                style="background: #333; color: #fff; padding: 10px 20px; border: none; border-radius: 4px; cursor: pointer;"
+              >
+                Send
+              </button>
+            </form>
+          </section>
     </main>
 
     <footer> 
         <p>&copy; 2024 SmartWatts. All rights reserved.</p>
     </footer>
+    <!-- ================= Fetch NYC Data Script ================= -->
     <script>
         const fetchDataBtn = document.getElementById('fetchDataBtn');
         const resultsDiv = document.getElementById('results');
