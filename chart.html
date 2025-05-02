@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>IESVE Energy Chart</title>
+  <script src="https://d3js.org/d3.v7.min.js"></script>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 2rem;
+    }
+    #chart {
+      margin-top: 2rem;
+    }
+    .legend rect {
+      stroke: #fff;
+      stroke-width: 1px;
+    }
+  </style>
+</head>
+<body>
+  <h2>Annual Energy Breakdown</h2>
+  <div id="chart"></div>
+
+  <script>
+    const rawCsv = localStorage.getItem("iesveCsvData");
+    if (!rawCsv) {
+      document.body.innerHTML = "<p>No CSV data found. Please upload a file first.</p>";
+      throw new Error("No CSV data");
+    }
+
+    const lines = rawCsv.split("\n").map(l => l.split(","));
+    const headers = lines[4].map(h => h.trim());
+    const totalRow = lines[19];
+
+    const keys = [
+      "Interior Lighting (MBtu)",
+      "Receptacle Equipment (MBtu)",
+      "Space Heating (MBtu)",
+      "Service Water Heating (MBtu)",
+      "Space Cooling (MBtu)",
+      "Heat Rejection (MBtu)",
+      "Interior Central Fans (MBtu)",
+      "Interior Local Fans (MBtu)",
+      "Exhaust Fans (MBtu)",
+      "Pumps (MBtu)"
+    ];
+
+    const totals = {};
+    headers.forEach((h, i) => {
+      if (keys.includes(h)) {
+        totals[h] = parseFloat(totalRow[i]) || 0;
+      }
+    });
+
+    drawChart(totals, keys);
+
+    function drawChart(data, keys) {
+      const margin = { top: 40, right: 160, bottom: 60, left: 60 },
+            width = 700 - margin.left - margin.right,
+            height = 400 - margin.top - margin.bottom;
+
+      const svg = d3.select("#chart")
+        .append("svg")
+        .attr("width", width + margin.left + margin.right)
+        .attr("height", height + margin.top + margin.bottom)
+        .append("g")
+        .attr("transform", `translate(${margin.left},${margin.top})`);
+
+      const stack = d3.stack().keys(keys);
+      const stackedData = stack([data]);
+
+      const y = d3.scaleLinear()
+        .domain([0, d3.sum(Object.values(data))])
+        .range([height, 0]);
+
+      const color = d3.scaleOrdinal()
+        .domain(keys)
+        .range(d3.schemeCategory10);
+
+      svg.selectAll("rect")
+        .data(stackedData)
+        .join("rect")
+        .attr("x", width / 2 - 40)
+        .attr("y", d => y(d[0][1]))
+        .attr("height", d => y(d[0][0]) - y(d[0][1]))
+        .attr("width", 80)
+        .attr("fill", d => color(d.key));
+
+      svg.append("g")
+        .call(d3.axisLeft(y));
+
+      svg.append("text")
+        .attr("x", width / 2)
+        .attr("y", height + 40)
+        .attr("text-anchor", "middle")
+        .style("font-size", "14px")
+        .text("Total Annual Energy Consumption");
+
+      const legend = svg.append("g")
+        .attr("transform", `translate(${width + 20}, 0)`);
+
+      keys.forEach((key, i) => {
+        legend.append("rect")
+          .attr("x", 0)
+          .attr("y", i * 20)
+          .attr("width", 12)
+          .attr("height", 12)
+          .attr("fill", color(key));
+
+        legend.append("text")
+          .attr("x", 18)
+          .attr("y", i * 20 + 10)
+          .attr("font-size", "12px")
+          .text(key);
+      });
+    }
+  </script>
+</body>
+</html>
