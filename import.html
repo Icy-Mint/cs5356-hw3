@@ -96,7 +96,7 @@
 <body>
     <div class="import-container">
         <a href="index.html" class="back-btn">← Back to Home</a>
-        <h2>Import CSV Files</h2>
+        <h2>Import Raw Data Files</h2>
         <p>Select your building simulation result format:</p>
 
         <!--  Format selection buttons -->
@@ -134,6 +134,7 @@
     <div id="chart" style="margin-top: 3rem;"></div>
 
     <script>
+            
         const iesveBtn = document.getElementById('iesveBtn');
         const openStudioBtn = document.getElementById('openStudioBtn');
         const equestBtn = document.getElementById('equestBtn');
@@ -167,6 +168,24 @@
             iesveBtn.classList.remove('active');
             openStudioBtn.classList.remove('active');
             hideIESVE();
+        });
+
+        // Click to open file dialogs
+        document.getElementById('currentDropZone').addEventListener('click', () => {
+            document.getElementById('currentCsvFile').click();
+        });
+        document.getElementById('futureDropZone').addEventListener('click', () => {
+            document.getElementById('futureCsvFile').click();
+        });
+
+        //  Show selected file names
+        document.getElementById('currentCsvFile').addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            document.getElementById('currentFileStatus').textContent = file ? `Selected: ${file.name}` : '';
+        });
+        document.getElementById('futureCsvFile').addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            document.getElementById('futureFileStatus').textContent = file ? `Selected: ${file.name}` : '';
         });
 
         const form = document.getElementById('csvForm');
@@ -280,8 +299,10 @@
             });
         }
 
-        //  Initialize with IESVE visible only
+        // Initialize
         showIESVE();
+    
+
     </script>
 </body>
 </html>
