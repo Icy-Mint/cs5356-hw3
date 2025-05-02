@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Import CSV - SmartWatts</title>
     <link rel="stylesheet" href="style.css">
+
     <style>
         .import-container {
             max-width: 800px;
@@ -70,6 +71,8 @@
             color: #666;
         }
     </style>
+    <!--  ADDED: D3.js Library -->
+    <script src="https://d3js.org/d3.v7.min.js"></script>
 </head>
 <body>
     <div class="import-container">
@@ -101,7 +104,8 @@
             <button type="submit" class="submit-btn">Upload and Analyze</button>
         </form>
     </div>
-
+    <!--  ADDED: Chart container for D3 -->
+    <div id="chart" style="margin-top: 3rem;"></div>
     <script>
         function setupFileUpload(dropZoneId, fileInputId, statusId) {
             const dropZone = document.getElementById(dropZoneId);
@@ -151,21 +155,120 @@
         setupFileUpload('currentDropZone', 'currentCsvFile', 'currentFileStatus');
         setupFileUpload('futureDropZone', 'futureCsvFile', 'futureFileStatus');
 
-        // Handle form submission
-        const form = document.getElementById('csvForm');
-        form.addEventListener('submit', (e) => {
-            e.preventDefault();
-            const currentFile = document.getElementById('currentCsvFile').files[0];
-            const futureFile = document.getElementById('futureCsvFile').files[0];
+        // REPLACED: Form submit handler with D3 processing
+    const form = document.getElementById('csvForm');
+    form.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const currentFile = document.getElementById('currentCsvFile').files[0];
+      if (!currentFile) {
+        alert('Please upload the current CSV file');
+        return;
+      }
 
-            if (!currentFile || !futureFile) {
-                alert('Please upload both current and future CSV files');
-                return;
-            }
+      const reader = new FileReader();
+      reader.onload = function (e) {
+        const text = e.target.result;
+        const lines = text.split("\n").map(line => line.split(","));
+        const headers = lines[3].map(h => h.trim());
+        const dataRows = lines.slice(5);
 
-            // Here you would typically send both files to your server
-            alert('Files uploaded successfully! (This is a demo - no actual upload occurs)');
+        const data = dataRows.map(row => {
+          const obj = {};
+          headers.forEach((h, i) => {
+            obj[h] = row[i] ? row[i].trim() : null;
+          });
+          return obj;
+        }).filter(d => d["Unnamed: 0"]);
+
+        drawD3AnnualStackedBar(data);
+      };
+      reader.readAsText(currentFile);
+    });
+
+    // 🔧 ADDED: D3 Annual Stacked Bar Chart
+    function drawD3AnnualStackedBar(data) {
+      const keys = [
+        "Interior Lighting (MBtu)",
+        "Receptacle Equipment (MBtu)",
+        "Space Heating (MBtu)",
+        "Service Water Heating (MBtu)",
+        "Space Cooling (MBtu)",
+        "Heat Rejection (MBtu)",
+        "Interior Central Fans (MBtu)",
+        "Interior Local Fans (MBtu)",
+        "Exhaust Fans (MBtu)",
+        "Pumps (MBtu)"
+      ];
+
+      const totals = {};
+      keys.forEach(k => totals[k] = 0);
+      data.forEach(row => {
+        keys.forEach(k => {
+          totals[k] += +row[k];
         });
-    </script>
+      });
+
+      const stackedData = [totals];
+      const stack = d3.stack().keys(keys);
+      const series = stack(stackedData);
+
+      const container = d3.select("#chart");
+      container.html("");
+
+      const margin = { top: 30, right: 120, bottom: 60, left: 80 },
+            width = 600 - margin.left - margin.right,
+            height = 400 - margin.top - margin.bottom;
+
+      const svg = container.append("svg")
+        .attr("width", width + margin.left + margin.right)
+        .attr("height", height + margin.top + margin.bottom)
+        .append("g")
+        .attr("transform", `translate(${margin.left},${margin.top})`);
+
+      const y = d3.scaleLinear()
+        .domain([0, d3.sum(Object.values(totals))])
+        .nice()
+        .range([height, 0]);
+
+      const color = d3.scaleOrdinal()
+        .domain(keys)
+        .range(d3.schemeCategory10);
+
+      svg.selectAll("rect")
+        .data(series)
+        .join("rect")
+        .attr("x", width / 2 - 40)
+        .attr("y", d => y(d[0][1]))
+        .attr("height", d => y(d[0][0]) - y(d[0][1]))
+        .attr("width", 80)
+        .attr("fill", d => color(d.key));
+
+      svg.append("g").call(d3.axisLeft(y));
+
+      svg.append("text")
+        .attr("x", width / 2)
+        .attr("y", height + 35)
+        .attr("text-anchor", "middle")
+        .style("font-size", "14px")
+        .text("Total Annual Energy Consumption");
+
+      const legend = svg.append("g")
+        .attr("transform", `translate(${width + 10}, 0)`);
+
+      keys.forEach((key, i) => {
+        legend.append("rect")
+          .attr("x", 0)
+          .attr("y", i * 20)
+          .attr("width", 12)
+          .attr("height", 12)
+          .attr("fill", color(key));
+        legend.append("text")
+          .attr("x", 18)
+          .attr("y", i * 20 + 10)
+          .attr("font-size", "12px")
+          .text(key);
+      });
+    }
+  </script>
 </body>
-</html> 
+</html>
