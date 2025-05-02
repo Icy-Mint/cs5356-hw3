@@ -171,13 +171,28 @@
     });
 
     document.getElementById('currentCsvFile').addEventListener('change', (e) => {
-      const file = e.target.files[0];
-      document.getElementById('currentFileStatus').textContent = file ? `${file.name} uploaded successfully.` : '';
-    });
-    document.getElementById('futureCsvFile').addEventListener('change', (e) => {
-      const file = e.target.files[0];
-      document.getElementById('futureFileStatus').textContent = file ? `${file.name} uploaded successfully.` : '';
-    });
+        const file = e.target.files[0];
+        const status = document.getElementById('currentFileStatus');
+        if (file) {
+            status.textContent = `${file.name} uploaded successfully.`;
+            status.style.color = '#28a745'; // green
+        } else {
+            status.textContent = '';
+            status.style.color = '';
+        }
+        });
+
+        document.getElementById('futureCsvFile').addEventListener('change', (e) => {
+        const file = e.target.files[0];
+        const status = document.getElementById('futureFileStatus');
+        if (file) {
+            status.textContent = `${file.name} uploaded successfully.`;
+            status.style.color = '#28a745'; //  green
+        } else {
+            status.textContent = '';
+            status.style.color = '';
+        }
+        });
 
     const form = document.getElementById('csvForm');
     form.addEventListener('submit', (e) => {
