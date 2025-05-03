@@ -69,6 +69,31 @@
       font-size: 0.9rem;
       color: #666;
     }
+    .csv-preview {
+      margin-top: 1rem;
+      max-height: 300px;
+      overflow: auto;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+    }
+    .csv-preview table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+    .csv-preview th, .csv-preview td {
+      border: 1px solid #ddd;
+      padding: 8px;
+      text-align: left;
+      font-size: 0.9rem;
+    }
+    .csv-preview th {
+      background-color: #f5f5f5;
+      position: sticky;
+      top: 0;
+    }
+    .csv-preview tr:nth-child(even) {
+      background-color: #f9f9f9;
+    }
     .format-buttons {
       display: flex;
       justify-content: center;
@@ -112,6 +137,7 @@
           <p>Click to select or drag and drop your current data CSV file here</p>
         </div>
         <div class="file-status" id="currentFileStatus"></div>
+        <div class="csv-preview" id="currentCsvPreview"></div>
       </div>
 
       <div class="upload-section iesve-section">
@@ -122,6 +148,7 @@
           <p>Click to select or drag and drop your future data CSV file here</p>
         </div>
         <div class="file-status" id="futureFileStatus"></div>
+        <div class="csv-preview" id="futureCsvPreview"></div>
       </div>
 
       <button type="submit" class="submit-btn iesve-section">Upload and Analyze</button>
@@ -173,26 +200,106 @@
     document.getElementById('currentCsvFile').addEventListener('change', (e) => {
         const file = e.target.files[0];
         const status = document.getElementById('currentFileStatus');
+        const preview = document.getElementById('currentCsvPreview');
         if (file) {
             status.textContent = `${file.name} uploaded successfully.`;
             status.style.color = '#28a745'; // green
+            
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const text = e.target.result;
+                const rows = text.split('\n')
+                    .map(row => row.split(','))
+                    .filter(row => row.some(cell => cell.trim() !== '')); // Remove rows where all cells are empty
+                
+                const table = document.createElement('table');
+                
+                // Create header
+                const thead = document.createElement('thead');
+                const headerRow = document.createElement('tr');
+                rows[0].forEach(header => {
+                    const th = document.createElement('th');
+                    th.textContent = header;
+                    headerRow.appendChild(th);
+                });
+                thead.appendChild(headerRow);
+                table.appendChild(thead);
+                
+                // Create body
+                const tbody = document.createElement('tbody');
+                for (let i = 1; i < rows.length; i++) {
+                    const tr = document.createElement('tr');
+                    rows[i].forEach(cell => {
+                        const td = document.createElement('td');
+                        td.textContent = cell;
+                        tr.appendChild(td);
+                    });
+                    tbody.appendChild(tr);
+                }
+                table.appendChild(tbody);
+                
+                preview.innerHTML = '';
+                preview.appendChild(table);
+            };
+            reader.readAsText(file);
         } else {
             status.textContent = '';
             status.style.color = '';
+            preview.innerHTML = '';
         }
-        });
+    });
 
-        document.getElementById('futureCsvFile').addEventListener('change', (e) => {
+    document.getElementById('futureCsvFile').addEventListener('change', (e) => {
         const file = e.target.files[0];
         const status = document.getElementById('futureFileStatus');
+        const preview = document.getElementById('futureCsvPreview');
         if (file) {
             status.textContent = `${file.name} uploaded successfully.`;
-            status.style.color = '#28a745'; //  green
+            status.style.color = '#28a745'; // green
+            
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const text = e.target.result;
+                const rows = text.split('\n')
+                    .map(row => row.split(','))
+                    .filter(row => row.some(cell => cell.trim() !== '')); // Remove rows where all cells are empty
+                
+                const table = document.createElement('table');
+                
+                // Create header
+                const thead = document.createElement('thead');
+                const headerRow = document.createElement('tr');
+                rows[0].forEach(header => {
+                    const th = document.createElement('th');
+                    th.textContent = header;
+                    headerRow.appendChild(th);
+                });
+                thead.appendChild(headerRow);
+                table.appendChild(thead);
+                
+                // Create body
+                const tbody = document.createElement('tbody');
+                for (let i = 1; i < rows.length; i++) {
+                    const tr = document.createElement('tr');
+                    rows[i].forEach(cell => {
+                        const td = document.createElement('td');
+                        td.textContent = cell;
+                        tr.appendChild(td);
+                    });
+                    tbody.appendChild(tr);
+                }
+                table.appendChild(tbody);
+                
+                preview.innerHTML = '';
+                preview.appendChild(table);
+            };
+            reader.readAsText(file);
         } else {
             status.textContent = '';
             status.style.color = '';
+            preview.innerHTML = '';
         }
-        });
+    });
 
     const form = document.getElementById('csvForm');
     form.addEventListener('submit', (e) => {
