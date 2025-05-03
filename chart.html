@@ -2,120 +2,81 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>IESVE Energy Chart</title>
+  <title>Energy Donut Chart</title>
   <script src="https://d3js.org/d3.v7.min.js"></script>
   <style>
     body {
-      font-family: Arial, sans-serif;
-      margin: 2rem;
+      font-family: sans-serif;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      margin: 0;
     }
-    #chart {
-      margin-top: 2rem;
+
+    svg {
+      width: 500px;
+      height: 500px;
     }
-    .legend rect {
-      stroke: #fff;
-      stroke-width: 1px;
+
+    .arc text {
+      font-size: 12px;
+      fill: white;
+      text-anchor: middle;
+    }
+
+    .center-label {
+      font-size: 16px;
+      font-weight: bold;
+      text-anchor: middle;
+      fill: #333;
     }
   </style>
 </head>
 <body>
-  <h2>Annual Energy Breakdown</h2>
-  <div id="chart"></div>
+  <svg></svg>
 
   <script>
-    const rawCsv = localStorage.getItem("iesveCsvData");
-    if (!rawCsv) {
-      document.body.innerHTML = "<p>No CSV data found. Please upload a file first.</p>";
-      throw new Error("No CSV data");
-    }
+    const width = 500, height = 500, radius = Math.min(width, height) / 2;
+    const svg = d3.select("svg")
+                  .append("g")
+                  .attr("transform", `translate(${width / 2}, ${height / 2})`);
 
-    const lines = rawCsv.split("\n").map(l => l.split(","));
-    const headers = lines[4].map(h => h.trim());
-    const totalRow = lines[19];
+    const color = d3.scaleOrdinal(d3.schemeTableau10);
 
-    const keys = [
-      "Interior Lighting (MBtu)",
-      "Receptacle Equipment (MBtu)",
-      "Space Heating (MBtu)",
-      "Service Water Heating (MBtu)",
-      "Space Cooling (MBtu)",
-      "Heat Rejection (MBtu)",
-      "Interior Central Fans (MBtu)",
-      "Interior Local Fans (MBtu)",
-      "Exhaust Fans (MBtu)",
-      "Pumps (MBtu)"
-    ];
+    d3.csv("raw_data.csv").then(data => {
+      const totalRow = data.find(row => row[""] === "Summed total");
+      const energyData = Object.entries(totalRow)
+        .filter(([key, _]) => key !== "")
+        .map(([key, value]) => ({
+          label: key,
+          value: parseFloat(value)
+        }));
 
-    const totals = {};
-    headers.forEach((h, i) => {
-      if (keys.includes(h)) {
-        totals[h] = parseFloat(totalRow[i]) || 0;
-      }
-    });
+      const total = d3.sum(energyData, d => d.value);
 
-    drawChart(totals, keys);
+      const pie = d3.pie().value(d => d.value);
+      const arc = d3.arc().innerRadius(radius * 0.6).outerRadius(radius * 0.9);
 
-    function drawChart(data, keys) {
-      const margin = { top: 40, right: 160, bottom: 60, left: 60 },
-            width = 700 - margin.left - margin.right,
-            height = 400 - margin.top - margin.bottom;
+      const arcs = svg.selectAll("arc")
+                      .data(pie(energyData))
+                      .enter()
+                      .append("g")
+                      .attr("class", "arc");
 
-      const svg = d3.select("#chart")
-        .append("svg")
-        .attr("width", width + margin.left + margin.right)
-        .attr("height", height + margin.top + margin.bottom)
-        .append("g")
-        .attr("transform", `translate(${margin.left},${margin.top})`);
+      arcs.append("path")
+          .attr("d", arc)
+          .attr("fill", d => color(d.data.label));
 
-      const stack = d3.stack().keys(keys);
-      const stackedData = stack([data]);
-
-      const y = d3.scaleLinear()
-        .domain([0, d3.sum(Object.values(data))])
-        .range([height, 0]);
-
-      const color = d3.scaleOrdinal()
-        .domain(keys)
-        .range(d3.schemeCategory10);
-
-      svg.selectAll("rect")
-        .data(stackedData)
-        .join("rect")
-        .attr("x", width / 2 - 40)
-        .attr("y", d => y(d[0][1]))
-        .attr("height", d => y(d[0][0]) - y(d[0][1]))
-        .attr("width", 80)
-        .attr("fill", d => color(d.key));
-
-      svg.append("g")
-        .call(d3.axisLeft(y));
+      arcs.append("text")
+          .attr("transform", d => `translate(${arc.centroid(d)})`)
+          .text(d => `${((d.data.value / total) * 100).toFixed(1)}%`);
 
       svg.append("text")
-        .attr("x", width / 2)
-        .attr("y", height + 40)
-        .attr("text-anchor", "middle")
-        .style("font-size", "14px")
-        .text("Total Annual Energy Consumption");
-
-      const legend = svg.append("g")
-        .attr("transform", `translate(${width + 20}, 0)`);
-
-      keys.forEach((key, i) => {
-        legend.append("rect")
-          .attr("x", 0)
-          .attr("y", i * 20)
-          .attr("width", 12)
-          .attr("height", 12)
-          .attr("fill", color(key));
-
-        legend.append("text")
-          .attr("x", 18)
-          .attr("y", i * 20 + 10)
-          .attr("font-size", "12px")
-          .text(key);
-      });
-    }
+         .attr("class", "center-label")
+         .attr("dy", "0.35em")
+         .text(`${(total / 1000).toFixed(1)} MBtu/sf/year`);
+    });
   </script>
 </body>
 </html>
