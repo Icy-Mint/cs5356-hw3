@@ -1,9 +1,9 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>IESVE Energy Chart</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>IESVE Energy Comparison</title>
   <script src="https://d3js.org/d3.v7.min.js"></script>
   <style>
     body {
@@ -20,19 +20,21 @@
   </style>
 </head>
 <body>
-  <h2>Annual Energy Breakdown</h2>
+  <a href="import.html" style="display: inline-block; margin: 1rem 2rem; color: #333; text-decoration: none;"
+     onmouseover="this.style.textDecoration='underline'"
+     onmouseout="this.style.textDecoration='none'">← Back to Previous Page</a>
+
+  <h2>Annual Energy Breakdown: Current vs Future</h2>
   <div id="chart"></div>
 
   <script>
-    const rawCsv = localStorage.getItem("iesveCsvData");
-    if (!rawCsv) {
-      document.body.innerHTML = "<p>No CSV data found. Please upload a file first.</p>";
-      throw new Error("No CSV data");
-    }
+    const rawCsvCurrent = localStorage.getItem("iesveCsvData");
+    const rawCsvFuture = localStorage.getItem("iesveFutureCsvData");
 
-    const lines = rawCsv.split("\n").map(l => l.split(","));
-    const headers = lines[4].map(h => h.trim());
-    const totalRow = lines[19];
+    if (!rawCsvCurrent || !rawCsvFuture) {
+      document.body.innerHTML = "<p>Missing CSV data. Please upload both current and future files first.</p>";
+      throw new Error("Missing CSV data");
+    }
 
     const keys = [
       "Interior Lighting (MBtu)",
@@ -47,14 +49,28 @@
       "Pumps (MBtu)"
     ];
 
-    const totals = {};
-    headers.forEach((h, i) => {
-      if (keys.includes(h)) {
-        totals[h] = parseFloat(totalRow[i]) || 0;
-      }
-    });
+    function parseCsvTotals(csvText) {
+      const lines = csvText.split("\n").map(l => l.split(","));
+      const headers = lines[4].map(h => h.trim());
+      const totalRow = lines[19];
+      const totals = {};
+      headers.forEach((h, i) => {
+        if (keys.includes(h)) {
+          totals[h] = parseFloat(totalRow[i]) || 0;
+        }
+      });
+      return totals;
+    }
 
-    drawChart(totals, keys);
+    const currentTotals = parseCsvTotals(rawCsvCurrent);
+    const futureTotals = parseCsvTotals(rawCsvFuture);
+
+    const chartData = [
+      { label: "Current", ...currentTotals },
+      { label: "Future", ...futureTotals }
+    ];
+
+    drawChart(chartData, keys);
 
     function drawChart(data, keys) {
       const margin = { top: 40, right: 160, bottom: 60, left: 60 },
@@ -69,37 +85,65 @@
         .attr("transform", `translate(${margin.left},${margin.top})`);
 
       const stack = d3.stack().keys(keys);
-      const stackedData = stack([data]);
+      const stackedData = stack(data);
+
+      const maxTotal = d3.max(data, d => keys.reduce((sum, k) => sum + d[k], 0));
+
+      const x = d3.scaleBand()
+        .domain(data.map(d => d.label))
+        .range([0, width])
+        .padding(0.4);
 
       const y = d3.scaleLinear()
-        .domain([0, d3.sum(Object.values(data))])
+        .domain([0, maxTotal])
         .range([height, 0]);
 
       const color = d3.scaleOrdinal()
         .domain(keys)
         .range(d3.schemeCategory10);
 
-      svg.selectAll("rect")
+      svg.selectAll("g.layer")
         .data(stackedData)
+        .join("g")
+        .attr("class", "layer")
+        .attr("fill", d => color(d.key))
+        .selectAll("rect")
+        .data(d => d)
         .join("rect")
-        .attr("x", width / 2 - 40)
-        .attr("y", d => y(d[0][1]))
-        .attr("height", d => y(d[0][0]) - y(d[0][1]))
-        .attr("width", 80)
-        .attr("fill", d => color(d.key));
+        .attr("x", d => x(d.data.label))
+        .attr("y", d => y(d[1]))
+        .attr("height", d => y(d[0]) - y(d[1]))
+        .attr("width", x.bandwidth());
 
+      // X-axis
+      svg.append("g")
+        .attr("transform", `translate(0,${height})`)
+        .call(d3.axisBottom(x));
+
+      // Y-axis
       svg.append("g")
         .call(d3.axisLeft(y));
 
+      // X-label
       svg.append("text")
         .attr("x", width / 2)
         .attr("y", height + 40)
         .attr("text-anchor", "middle")
         .style("font-size", "14px")
-        .text("Total Annual Energy Consumption");
+        .text("Energy Scenario");
 
+      // Y-label
+      svg.append("text")
+        .attr("transform", "rotate(-90)")
+        .attr("x", -height / 2)
+        .attr("y", -40)
+        .attr("text-anchor", "middle")
+        .style("font-size", "14px")
+        .text("Annual Energy Consumption (Million BTU)");
+
+      // Legend
       const legend = svg.append("g")
-        .attr("transform", `translate(${width + 20}, 0)`);
+        .attr("transform", `translate(${width + 10}, 0)`);
 
       keys.forEach((key, i) => {
         legend.append("rect")

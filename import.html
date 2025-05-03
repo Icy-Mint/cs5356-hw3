@@ -218,7 +218,14 @@
 
         // Pass data via localStorage to new page
         localStorage.setItem("iesveCsvData", text);
-        window.location.href = "chart.html";
+        const futureFile = document.getElementById("futureCsvFile").files[0];
+        const reader2 = new FileReader();
+        reader2.onload = function(e2) {
+            localStorage.setItem("iesveFutureCsvData", e2.target.result);
+            window.location.href = "chart.html";
+        };
+        reader2.readAsText(futureFile);
+
       };
       reader.readAsText(currentFile);
     });
