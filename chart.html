@@ -108,13 +108,13 @@
         .attr("class", "layer")
         .attr("fill", d => color(d.key))
         .selectAll("rect")
-        .data(d => d)
+        .data(d => d.length ? d : [d]) // make sure we always get an array
         .join("rect")
         .attr("x", d => x(d.data.label))
         .attr("y", d => y(d[1]))
-        .attr("height", d => y(d[0]) - y(d[1]))
+        .attr("height", d => Math.max(0, y(d[0]) - y(d[1]))) //  ensure height ≥ 0
         .attr("width", x.bandwidth());
-
+        
       svg.append("g")
         .attr("transform", `translate(0,${height})`)
         .call(d3.axisBottom(x));
