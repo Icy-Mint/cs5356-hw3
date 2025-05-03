@@ -114,6 +114,47 @@
     .hidden {
       display: none;
     }
+    .project-form {
+      margin-bottom: 2rem;
+      padding: 1.5rem;
+      border: 1px solid #eee;
+      border-radius: 8px;
+      background: #f9f9f9;
+    }
+    .project-form h3 {
+      margin-top: 0;
+      color: #333;
+      margin-bottom: 1.5rem;
+    }
+    .form-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 1rem;
+    }
+    .form-group {
+      margin-bottom: 1rem;
+    }
+    .form-group label {
+      display: block;
+      margin-bottom: 0.5rem;
+      color: #333;
+      font-weight: 500;
+    }
+    .form-group input,
+    .form-group select {
+      width: 100%;
+      padding: 8px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      font-size: 0.9rem;
+    }
+    .required::after {
+      content: " *";
+      color: #dc3545;
+    }
+    .form-group.full-width {
+      grid-column: 1 / -1;
+    }
   </style>
 </head>
 <body>
@@ -129,6 +170,149 @@
     </div>
 
     <form class="import-form" id="csvForm">
+      <div class="project-form iesve-section">
+        <h3>Project Information</h3>
+        <div class="form-grid">
+          <div class="form-group">
+            <label class="required" for="projectName">Project Name</label>
+            <input type="text" id="projectName" name="projectName" required>
+          </div>
+          <div class="form-group">
+            <label class="required" for="projectSqft">Project Sqft</label>
+            <input type="number" id="projectSqft" name="projectSqft" required>
+          </div>
+          <div class="form-group">
+            <label for="projectId">Project ID (AIA)</label>
+            <input type="text" id="projectId" name="projectId">
+          </div>
+          <div class="form-group">
+            <label class="required" for="climateZone">Climate Zone</label>
+            <select id="climateZone" name="climateZone" required>
+              <option value="">Select Climate Zone</option>
+              <option value="1A">1A - Very Hot-Humid</option>
+              <option value="2A">2A - Hot-Humid</option>
+              <option value="2B">2B - Hot-Dry</option>
+              <option value="3A">3A - Warm-Humid</option>
+              <option value="3B">3B - Warm-Dry</option>
+              <option value="3C">3C - Warm-Marine</option>
+              <option value="4A">4A - Mixed-Humid</option>
+              <option value="4B">4B - Mixed-Dry</option>
+              <option value="4C">4C - Mixed-Marine</option>
+              <option value="5A">5A - Cool-Humid</option>
+              <option value="5B">5B - Cool-Dry</option>
+              <option value="6A">6A - Cold-Humid</option>
+              <option value="6B">6B - Cold-Dry</option>
+              <option value="7">7 - Very Cold</option>
+              <option value="8">8 - Subarctic</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="required" for="projectCategory">Project Category</label>
+            <select id="projectCategory" name="projectCategory" required>
+              <option value="">Select Category</option>
+              <option value="office">Office</option>
+              <option value="retail">Retail</option>
+              <option value="education">Education</option>
+              <option value="healthcare">Healthcare</option>
+              <option value="hospitality">Hospitality</option>
+              <option value="residential">Residential</option>
+              <option value="industrial">Industrial</option>
+              <option value="other">Other</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="required" for="constructionType">Construction Type</label>
+            <select id="constructionType" name="constructionType" required>
+              <option value="">Select Type</option>
+              <option value="new">New Construction</option>
+              <option value="renovation">Major Renovation</option>
+              <option value="core">Core and Shell</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="projectPhase">Project Phase</label>
+            <select id="projectPhase" name="projectPhase">
+              <option value="">Select Phase</option>
+              <option value="design">Design</option>
+              <option value="construction">Construction</option>
+              <option value="post">Post-Construction</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="yearOccupancy">Year of Occupancy</label>
+            <input type="number" id="yearOccupancy" name="yearOccupancy" min="1900" max="2100">
+          </div>
+          <div class="form-group">
+            <label class="required" for="leedVersion">LEED Version</label>
+            <select id="leedVersion" name="leedVersion" required>
+              <option value="">Select Version</option>
+              <option value="v4">LEED v4</option>
+              <option value="v4.1">LEED v4.1</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="required" for="targetCertification">Target Certification</label>
+            <select id="targetCertification" name="targetCertification" required>
+              <option value="">Select Certification</option>
+              <option value="certified">Certified</option>
+              <option value="silver">Silver</option>
+              <option value="gold">Gold</option>
+              <option value="platinum">Platinum</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="required" for="country">Country</label>
+            <input type="text" id="country" name="country" required>
+          </div>
+          <div class="form-group">
+            <label for="stateProvince">State/Province</label>
+            <input type="text" id="stateProvince" name="stateProvince">
+          </div>
+          <div class="form-group">
+            <label class="required" for="zipCode">Zip Code</label>
+            <input type="text" id="zipCode" name="zipCode" required>
+          </div>
+          <div class="form-group">
+            <label for="city">City</label>
+            <input type="text" id="city" name="city">
+          </div>
+          <div class="form-group">
+            <label class="required" for="designEnergyCode">Design Energy Code</label>
+            <select id="designEnergyCode" name="designEnergyCode" required>
+              <option value="">Select Energy Code</option>
+              <option value="ashrae90.1-2019">ASHRAE 90.1-2019</option>
+              <option value="ashrae90.1-2016">ASHRAE 90.1-2016</option>
+              <option value="ashrae90.1-2013">ASHRAE 90.1-2013</option>
+              <option value="iecc-2021">IECC 2021</option>
+              <option value="iecc-2018">IECC 2018</option>
+              <option value="iecc-2015">IECC 2015</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="meteredData">Metered Energy Use Data</label>
+            <select id="meteredData" name="meteredData">
+              <option value="">Select Option</option>
+              <option value="yes">Yes</option>
+              <option value="no">No</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="required" for="energyModelingTool">Energy Modeling Tool</label>
+            <select id="energyModelingTool" name="energyModelingTool" required>
+              <option value="">Select Tool</option>
+              <option value="iesve">IESVE</option>
+              <option value="openstudio">OpenStudio</option>
+              <option value="equest">eQuest</option>
+              <option value="other">Other</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="targetEUI">Target EUI</label>
+            <input type="number" id="targetEUI" name="targetEUI" step="0.01">
+          </div>
+        </div>
+      </div>
+
       <div class="upload-section iesve-section">
         <h3>Current Energy Data</h3>
         <p>Upload your current energy consumption data in CSV format.</p>
