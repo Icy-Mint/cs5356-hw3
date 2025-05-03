@@ -10,12 +10,51 @@
       font-family: Arial, sans-serif;
       margin: 2rem;
     }
-    #chart {
+    .chart-container {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 2rem;
       margin-top: 2rem;
+    }
+    #annual-chart, #pie-chart {
+      flex: 1 1 400px;
+    }
+    #line-chart {
+      flex: 1 1 100%;
+      margin-top: 1rem;
+      min-height: 300px;
     }
     .legend rect {
       stroke: #fff;
       stroke-width: 1px;
+    }
+    .category-title {
+      font-weight: bold;
+      font-size: 1.2rem;
+      margin-bottom: 1rem;
+      text-align: center;
+    }
+    .chart-title {
+      font-weight: bold;
+      font-size: 1.2rem;
+      margin-bottom: 1rem;
+      text-align: center;
+    }
+    .bar, .pie-slice {
+      cursor: pointer;
+    }
+    #instructions {
+      background-color: #f8f9fa;
+      padding: 1rem;
+      border-radius: 4px;
+      margin-top: 1rem;
+    }
+    #annual-chart {
+      flex: 1 1 600px;
+      margin-bottom: 2rem;
+    }
+    #pie-chart {
+      flex: 1 1 400px;
     }
   </style>
 </head>
@@ -24,10 +63,24 @@
      onmouseover="this.style.textDecoration='underline'"
      onmouseout="this.style.textDecoration='none'">← Back to Previous Page</a>
 
-  <h2>Annual Energy Breakdown</h2>
-  <div id="chart"></div>
+  <h2>Energy Visualization Dashboard</h2>
+  
+
+  
+  <div class="chart-container">
+    <div id="annual-chart">
+      <div class="chart-title">Annual Energy Comparison</div>
+    </div>
+    <div id="pie-chart">
+      <div class="chart-title">Energy Use by Category (<span id="pie-data-type">Current</span>)</div>
+    </div>
+    <div id="line-chart">
+      <div class="chart-title">Monthly Trend: <span id="selected-category">Select a category</span></div>
+    </div>
+  </div>
 
   <script>
+    // Load data from local storage
     const rawCsvCurrent = localStorage.getItem("iesveCsvData");
     const rawCsvFuture = localStorage.getItem("iesveFutureCsvData");
 
@@ -49,6 +102,12 @@
       "Pumps (MBtu)"
     ];
 
+    // Color scheme for consistency across charts
+    const colorScale = d3.scaleOrdinal()
+      .domain(keys)
+      .range(d3.schemeCategory10);
+
+    // Parse CSV to get annual totals
     function parseCsvTotals(csvText) {
       const lines = csvText.split("\n").map(l => l.split(","));
       const headers = lines[4].map(h => h.trim());
@@ -62,22 +121,78 @@
       return totals;
     }
 
-    const currentTotals = parseCsvTotals(rawCsvCurrent);
-    const chartData = [{ label: "Current", ...currentTotals }];
-
-    if (rawCsvFuture) {
-      const futureTotals = parseCsvTotals(rawCsvFuture);
-      chartData.push({ label: "Future", ...futureTotals });
+    // Parse CSV to get monthly data
+    function parseCsvMonthly(csvText) {
+      const lines = csvText.split("\n").map(l => l.split(","));
+      const headers = lines[4].map(h => h.trim());
+      const monthlyData = [];
+      
+      // Extract month rows (lines 7-18)
+      for (let i = 7; i <= 18; i++) {
+        const row = lines[i];
+        const monthData = { month: row[0].substring(0, 3) }; // Get month abbreviation
+        
+        headers.forEach((h, j) => {
+          if (keys.includes(h)) {
+            monthData[h] = parseFloat(row[j]) || 0;
+          }
+        });
+        
+        monthlyData.push(monthData);
+      }
+      
+      return monthlyData;
     }
 
-    drawChart(chartData, keys);
+    const currentTotals = parseCsvTotals(rawCsvCurrent);
+    const currentMonthly = parseCsvMonthly(rawCsvCurrent);
+    
+    const annualChartData = [{ label: "Current", ...currentTotals }];
+    let futureTotals, futureMonthly;
 
-    function drawChart(data, keys) {
+    // If future data exists in localStorage, use it
+    if (rawCsvFuture) {
+      futureTotals = parseCsvTotals(rawCsvFuture);
+      futureMonthly = parseCsvMonthly(rawCsvFuture);
+    } 
+    // Otherwise, create example future data (70% of current as sample efficiency improvement)
+    else {
+      futureTotals = {};
+      keys.forEach(key => {
+        futureTotals[key] = currentTotals[key] * 0.7; // 30% reduction as example
+      });
+      
+      futureMonthly = [];
+      currentMonthly.forEach(monthData => {
+        const futureMonth = { month: monthData.month };
+        keys.forEach(key => {
+          futureMonth[key] = monthData[key] * 0.7; // 30% reduction as example
+        });
+        futureMonthly.push(futureMonth);
+      });
+      
+      console.log("No future data found. Using sample data (70% of current values).");
+    }
+    
+    // Always add future data to chart
+    annualChartData.push({ label: "Future", ...futureTotals });
+
+    // Create the vertical stacked bar chart
+    drawAnnualChart(annualChartData, keys);
+    
+    // Create initial pie chart with Current data
+    drawPieChart("Current", currentTotals);
+    
+    // Set up placeholder for line chart
+    setupLineChart();
+
+    // Draw Annual Bar Chart
+    function drawAnnualChart(data, keys) {
       const margin = { top: 40, right: 160, bottom: 60, left: 60 },
-            width = 700 - margin.left - margin.right,
-            height = 400 - margin.top - margin.bottom;
+            width = 800 - margin.left - margin.right,
+            height = 450 - margin.top - margin.bottom;
 
-      const svg = d3.select("#chart")
+      const svg = d3.select("#annual-chart")
         .append("svg")
         .attr("width", width + margin.left + margin.right)
         .attr("height", height + margin.top + margin.bottom)
@@ -98,30 +213,52 @@
         .domain([0, maxTotal])
         .range([height, 0]);
 
-      const color = d3.scaleOrdinal()
-        .domain(keys)
-        .range(d3.schemeCategory10);
-
+      // Add bars with interaction
       svg.selectAll("g.layer")
         .data(stackedData)
         .join("g")
-        .attr("class", "layer")
-        .attr("fill", d => color(d.key))
+        .attr("class", d => `layer category-${d.key.replace(/\s+\([^)]+\)/g, '').replace(/\s+/g, '-').toLowerCase()}`)
+        .attr("fill", d => colorScale(d.key))
         .selectAll("rect")
-        .data(d => d.length ? d : [d]) // make sure we always get an array
+        .data(d => d.length ? d : [d])
         .join("rect")
+        .attr("class", "bar")
         .attr("x", d => x(d.data.label))
         .attr("y", d => y(d[1]))
-        .attr("height", d => Math.max(0, y(d[0]) - y(d[1]))) //  ensure height ≥ 0
-        .attr("width", x.bandwidth());
+        .attr("height", d => Math.max(0, y(d[0]) - y(d[1]))) 
+        .attr("width", x.bandwidth())
+        .attr("stroke", "white")
+        .attr("stroke-width", 0.5)
+        .attr("data-category", d => d.key)
+        .on("click", function(event, d) {
+          const category = this.getAttribute("data-category");
+          showMonthlyTrend(category);
+        })
+        .append("title")
+        .text(d => {
+          const category = d.key;
+          const value = (d[1] - d[0]).toFixed(2);
+          return `${d.data.label} - ${category}: ${value} MBtu`;
+        });
         
+      // Add axes
       svg.append("g")
         .attr("transform", `translate(0,${height})`)
-        .call(d3.axisBottom(x));
+        .call(d3.axisBottom(x))
+        .selectAll("text")
+        .style("cursor", "pointer")
+        .style("font-weight", "bold")
+        .style("font-size", "12px")
+        .on("click", function(event, d) {
+          // Make the click target more clear
+          d3.select(this).style("fill", "red").transition().duration(500).style("fill", "black");
+          togglePieChart(d);
+        });
 
       svg.append("g")
         .call(d3.axisLeft(y));
 
+      // Add axis labels
       svg.append("text")
         .attr("x", width / 2)
         .attr("y", height + 40)
@@ -137,23 +274,440 @@
         .style("font-size", "14px")
         .text("Annual Energy Consumption (Million BTU)");
 
+      // Add legend
       const legend = svg.append("g")
         .attr("transform", `translate(${width + 10}, 0)`);
 
       keys.forEach((key, i) => {
-        legend.append("rect")
-          .attr("x", 0)
-          .attr("y", i * 20)
+        const legendItem = legend.append("g")
+          .attr("transform", `translate(0, ${i * 20})`)
+          .style("cursor", "pointer")
+          .on("click", () => showMonthlyTrend(key));
+          
+        legendItem.append("rect")
           .attr("width", 12)
           .attr("height", 12)
-          .attr("fill", color(key));
+          .attr("fill", colorScale(key));
 
-        legend.append("text")
+        legendItem.append("text")
           .attr("x", 18)
-          .attr("y", i * 20 + 10)
+          .attr("y", 10)
           .attr("font-size", "12px")
           .text(key);
       });
+
+      // Add comparison label
+      svg.append("text")
+        .attr("x", width / 2)
+        .attr("y", -10)
+        .attr("text-anchor", "middle")
+        .style("font-size", "14px")
+        .style("font-weight", "bold")
+        .text("Current vs Future Energy Consumption");
+    }
+
+    // Draw Pie Chart
+    function drawPieChart(dataType, totals) {
+      console.log("Drawing pie chart for:", dataType);
+      console.log("With data:", totals);
+      
+      // Clear previous chart
+      d3.select("#pie-chart svg").remove();
+      
+      // Update title
+      document.getElementById("pie-data-type").textContent = dataType;
+      
+      const margin = { top: 20, right: 20, bottom: 20, left: 20 },
+            width = 400 - margin.left - margin.right,
+            height = 400 - margin.top - margin.bottom,
+            radius = Math.min(width, height) / 2;
+
+      const svg = d3.select("#pie-chart")
+        .append("svg")
+        .attr("width", width + margin.left + margin.right)
+        .attr("height", height + margin.top + margin.bottom)
+        .append("g")
+        .attr("transform", `translate(${width/2 + margin.left}, ${height/2 + margin.top})`);
+
+      // Convert data to pie format
+      const pieData = keys.map(key => ({
+        category: key,
+        value: totals[key] || 0
+      })).filter(d => d.value > 0);
+
+      // Create pie layout
+      const pie = d3.pie()
+        .value(d => d.value)
+        .sort(null);
+
+      const arcData = pie(pieData);
+
+      // Create arc generator
+      const arc = d3.arc()
+        .innerRadius(0)
+        .outerRadius(radius - 20);
+
+      // Create outer arc for labels
+      const outerArc = d3.arc()
+        .innerRadius(radius * 0.9)
+        .outerRadius(radius * 0.9);
+
+      // Add slices
+      const slices = svg.selectAll(".arc")
+        .data(arcData)
+        .join("g")
+        .attr("class", "arc");
+
+      slices.append("path")
+        .attr("d", arc)
+        .attr("class", "pie-slice")
+        .attr("fill", d => colorScale(d.data.category))
+        .attr("stroke", "white")
+        .attr("stroke-width", 2)
+        .on("click", (event, d) => showMonthlyTrend(d.data.category));
+
+      // Add labels
+      const threshold = 0.05; // 5% threshold for direct labels
+      
+      slices.filter(d => d.data.value / d3.sum(pieData, d => d.value) >= threshold)
+        .append("text")
+        .attr("transform", d => `translate(${arc.centroid(d)})`)
+        .attr("dy", ".35em")
+        .attr("text-anchor", "middle")
+        .style("font-size", "11px")
+        .style("fill", "white")
+        .text(d => {
+          const percent = (d.data.value / d3.sum(pieData, d => d.value) * 100).toFixed(1);
+          return percent > 3 ? `${percent}%` : '';
+        });
+    }
+
+    // Setup Line Chart
+    function setupLineChart() {
+      const margin = { top: 20, right: 60, bottom: 60, left: 60 },
+            width = 800 - margin.left - margin.right,
+            height = 300 - margin.top - margin.bottom;
+
+      const svg = d3.select("#line-chart")
+        .append("svg")
+        .attr("width", width + margin.left + margin.right)
+        .attr("height", height + margin.top + margin.bottom)
+        .append("g")
+        .attr("transform", `translate(${margin.left},${margin.top})`);
+        
+      // Add placeholder text
+      svg.append("text")
+        .attr("x", width / 2)
+        .attr("y", height / 2)
+        .attr("text-anchor", "middle")
+        .text("Click a category in the bar or pie chart to see monthly trends");
+    }
+
+    // Show Monthly Trend for Selected Category
+    function showMonthlyTrend(category) {
+      // Update selected category display
+      document.getElementById("selected-category").textContent = category;
+      
+      // Clear previous chart
+      d3.select("#line-chart svg").remove();
+      
+      const margin = { top: 20, right: 60, bottom: 60, left: 60 },
+            width = 800 - margin.left - margin.right,
+            height = 300 - margin.top - margin.bottom;
+
+      const svg = d3.select("#line-chart")
+        .append("svg")
+        .attr("width", width + margin.left + margin.right)
+        .attr("height", height + margin.top + margin.bottom)
+        .append("g")
+        .attr("transform", `translate(${margin.left},${margin.top})`);
+
+      // Prepare data for both current and future if available
+      const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+
+      const currentData = currentMonthly.map(d => ({
+        month: d.month,
+        value: d[category] || 0,
+        type: 'Current'
+      }));
+
+      let combinedData = [...currentData];
+      let futureData = null; // Initialize futureData
+
+      if (futureMonthly) {
+        futureData = futureMonthly.map(d => ({ // Assign to futureData
+          month: d.month,
+          value: d[category] || 0,
+          type: 'Future'
+        }));
+        combinedData = [...currentData, ...futureData];
+      }
+
+      // Create scales
+      const x = d3.scaleBand()
+        .domain(monthNames)
+        .range([0, width])
+        .padding(0.1);
+
+      const y = d3.scaleLinear()
+        .domain([0, d3.max(combinedData, d => d.value) * 1.1])
+        .range([height, 0]);
+
+      // Add seasonal annotations (Now drawn BEFORE axes/lines/points)
+      const heatingStartMonth = "Oct";
+      const heatingEndMonth = "Apr";
+      const coolingStartMonth = "May";
+      const coolingEndMonth = "Sep";
+
+      // Calculate correct start/end positions based on band boundaries
+      const heatingStartX_Oct = x(heatingStartMonth);
+      const heatingEndX_Apr = x(heatingEndMonth) + x.bandwidth();
+      const coolingStartX_May = x(coolingStartMonth);
+      const coolingEndX_Sep = x(coolingEndMonth) + x.bandwidth();
+
+      // --- Heating Season ---
+      // Background Shading (Part 1: Oct-Dec)
+      svg.append("rect")
+        .attr("x", heatingStartX_Oct)
+        .attr("y", 0)
+        .attr("width", width - heatingStartX_Oct)
+        .attr("height", height)
+        .attr("fill", "blue")
+        .attr("opacity", 0.08) // Increased opacity
+        .attr("stroke", "blue")
+        .attr("stroke-opacity", 0.15) // Increased opacity
+        .attr("stroke-width", 1);
+
+      // Background Shading (Part 2: Jan-Apr)
+      svg.append("rect")
+        .attr("x", 0)
+        .attr("y", 0)
+        .attr("width", heatingEndX_Apr)
+        .attr("height", height)
+        .attr("fill", "blue")
+        .attr("opacity", 0.08) // Increased opacity
+        .attr("stroke", "blue")
+        .attr("stroke-opacity", 0.15) // Increased opacity
+        .attr("stroke-width", 1);
+
+      // Heating Label
+      const heatingLabel = svg.append("g");
+      heatingLabel.append("rect") // Background rect first
+        .attr("x", 5)
+        .attr("y", 5)
+        .attr("width", 110)
+        .attr("height", 22)
+        .attr("fill", "white")
+        .attr("stroke", "blue")
+        .attr("stroke-width", 1)
+        .attr("rx", 4);
+      heatingLabel.append("text") // Text on top
+        .attr("x", 10)
+        .attr("y", 20)
+        .attr("fill", "blue")
+        .style("font-size", "12px")
+        .style("font-weight", "bold")
+        .text("Heating Season");
+
+
+      // --- Cooling Season ---
+      // Background Shading (May-Sep)
+      svg.append("rect")
+        .attr("x", coolingStartX_May)
+        .attr("y", 0)
+        .attr("width", coolingEndX_Sep - coolingStartX_May)
+        .attr("height", height)
+        .attr("fill", "red")
+        .attr("opacity", 0.08) // Increased opacity
+        .attr("stroke", "red")
+        .attr("stroke-opacity", 0.15) // Increased opacity
+        .attr("stroke-width", 1);
+
+      // Cooling Label
+      const coolingLabel = svg.append("g");
+      const coolingLabelX = coolingStartX_May + 5;
+      coolingLabel.append("rect") // Background rect first
+        .attr("x", coolingLabelX)
+        .attr("y", 5)
+        .attr("width", 110)
+        .attr("height", 22)
+        .attr("fill", "white")
+        .attr("stroke", "red")
+        .attr("stroke-width", 1)
+        .attr("rx", 4);
+      coolingLabel.append("text") // Text on top
+        .attr("x", coolingLabelX + 5)
+        .attr("y", 20)
+        .attr("fill", "red")
+        .style("font-size", "12px")
+        .style("font-weight", "bold")
+        .text("Cooling Season");
+
+
+      // --- Vertical Transition Lines ---
+      const seasonTransitions = ["May", "Oct"];
+      seasonTransitions.forEach(month => {
+        const monthX = x(month);
+        svg.append("line")
+          .attr("x1", monthX)
+          .attr("y1", 0)
+          .attr("x2", monthX)
+          .attr("y2", height)
+          .attr("stroke", month === "May" ? "red" : "blue")
+          .attr("stroke-width", 1.5)
+          .attr("stroke-dasharray", "4,4");
+      });
+      // --- END OF MOVED SEASONAL ANNOTATIONS ---
+
+
+      // Create line generators (can stay here)
+      const line = d3.line()
+        .x(d => x(d.month) + x.bandwidth() / 2)
+        .y(d => y(d.value));
+
+      // Add axes (Now drawn AFTER seasonal annotations)
+      svg.append("g")
+        .attr("transform", `translate(0,${height})`)
+        .call(d3.axisBottom(x));
+
+      svg.append("g")
+        .call(d3.axisLeft(y));
+
+      // Add lines (Now drawn AFTER seasonal annotations)
+      svg.append("path")
+        .datum(currentData)
+        .attr("fill", "none")
+        .attr("stroke", "#4285F4") // Google blue
+        .attr("stroke-width", 2)
+        .attr("d", line);
+
+      if (futureData) { // Check the assigned futureData variable
+        svg.append("path")
+          .datum(futureData)
+          .attr("fill", "none")
+          .attr("stroke", "#EA4335") // Google red
+          .attr("stroke-width", 2)
+          .attr("d", line);
+      }
+
+      // Add points (Now drawn AFTER seasonal annotations)
+      svg.selectAll(".current-point")
+        .data(currentData)
+        .join("circle")
+        .attr("class", "current-point")
+        .attr("cx", d => x(d.month) + x.bandwidth() / 2)
+        .attr("cy", d => y(d.value))
+        .attr("r", 4)
+        .attr("fill", "#4285F4");
+
+      if (futureData) { // Check the assigned futureData variable
+        svg.selectAll(".future-point")
+          .data(futureData)
+          .join("circle")
+          .attr("class", "future-point")
+          .attr("cx", d => x(d.month) + x.bandwidth() / 2)
+          .attr("cy", d => y(d.value))
+          .attr("r", 4)
+          .attr("fill", "#EA4335");
+      }
+
+      // Add axis labels (can stay here)
+      svg.append("text")
+        .attr("x", width / 2)
+        .attr("y", height + 40)
+        .attr("text-anchor", "middle")
+        .style("font-size", "14px")
+        .text("Month");
+
+      svg.append("text")
+        .attr("transform", "rotate(-90)")
+        .attr("x", -height / 2)
+        .attr("y", -40)
+        .attr("text-anchor", "middle")
+        .style("font-size", "14px")
+        .text("Energy Consumption (MBtu)");
+
+      // Add legend (can stay here)
+      const legend = svg.append("g")
+        .attr("transform", `translate(${width - 100}, 0)`);
+
+      legend.append("rect")
+        .attr("x", 0)
+        .attr("y", 0)
+        .attr("width", 15)
+        .attr("height", 15)
+        .attr("fill", "#4285F4");
+
+      legend.append("text")
+        .attr("x", 20)
+        .attr("y", 12)
+        .text("Current");
+
+      if (futureData) { // Check the assigned futureData variable
+        legend.append("rect")
+          .attr("x", 0)
+          .attr("y", 20)
+          .attr("width", 15)
+          .attr("height", 15)
+          .attr("fill", "#EA4335");
+
+        legend.append("text")
+          .attr("x", 20)
+          .attr("y", 32)
+          .text("Future");
+      }
+    }
+
+    // Toggle Pie Chart between Current and Future
+    function togglePieChart(dataType) {
+      console.log("Toggle requested for:", dataType);
+      
+      // Add currentDataType tracking
+      if (!window.currentDataType) {
+        window.currentDataType = "Current";
+      }
+      
+      // Only toggle if different from current
+      if (dataType !== window.currentDataType) {
+        if (dataType === "Current") {
+          drawPieChart("Current", currentTotals);
+          window.currentDataType = "Current";
+        } else if (dataType === "Future") {
+          drawPieChart("Future", futureTotals);
+          window.currentDataType = "Future";
+        }
+      }
+      
+      // Add direct toggle buttons for easier switching
+      if (!window.toggleButtonsAdded) {
+        const container = document.getElementById("pie-chart");
+        const buttonDiv = document.createElement("div");
+        buttonDiv.style.textAlign = "center";
+        buttonDiv.style.marginTop = "10px";
+        
+        const currentBtn = document.createElement("button");
+        currentBtn.innerText = "Show Current Data";
+        currentBtn.style.marginRight = "10px";
+        currentBtn.style.padding = "5px 10px";
+        currentBtn.style.backgroundColor = "#f0f0f0";
+        currentBtn.style.border = "1px solid #ccc";
+        currentBtn.style.borderRadius = "3px";
+        currentBtn.onclick = () => togglePieChart("Current");
+        
+        const futureBtn = document.createElement("button");
+        futureBtn.innerText = "Show Future Data";
+        futureBtn.style.padding = "5px 10px";
+        futureBtn.style.backgroundColor = "#f0f0f0";
+        futureBtn.style.border = "1px solid #ccc";
+        futureBtn.style.borderRadius = "3px";
+        futureBtn.onclick = () => togglePieChart("Future");
+        
+        buttonDiv.appendChild(currentBtn);
+        buttonDiv.appendChild(futureBtn);
+        container.appendChild(buttonDiv);
+        
+        window.toggleButtonsAdded = true;
+      }
     }
   </script>
 </body>
