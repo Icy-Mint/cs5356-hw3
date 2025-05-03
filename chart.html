@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>IESVE Energy Comparison</title>
+  <title>Annual Energy Comparison</title>
   <script src="https://d3js.org/d3.v7.min.js"></script>
   <style>
     body {
@@ -24,16 +24,16 @@
      onmouseover="this.style.textDecoration='underline'"
      onmouseout="this.style.textDecoration='none'">← Back to Previous Page</a>
 
-  <h2>Annual Energy Breakdown: Current vs Future</h2>
+  <h2>Annual Energy Breakdown</h2>
   <div id="chart"></div>
 
   <script>
     const rawCsvCurrent = localStorage.getItem("iesveCsvData");
     const rawCsvFuture = localStorage.getItem("iesveFutureCsvData");
 
-    if (!rawCsvCurrent || !rawCsvFuture) {
-      document.body.innerHTML = "<p>Missing CSV data. Please upload both current and future files first.</p>";
-      throw new Error("Missing CSV data");
+    if (!rawCsvCurrent) {
+      document.body.innerHTML = "<p>No current energy CSV found. Please upload it first.</p>";
+      throw new Error("No current CSV");
     }
 
     const keys = [
@@ -63,12 +63,12 @@
     }
 
     const currentTotals = parseCsvTotals(rawCsvCurrent);
-    const futureTotals = parseCsvTotals(rawCsvFuture);
+    const chartData = [{ label: "Current", ...currentTotals }];
 
-    const chartData = [
-      { label: "Current", ...currentTotals },
-      { label: "Future", ...futureTotals }
-    ];
+    if (rawCsvFuture) {
+      const futureTotals = parseCsvTotals(rawCsvFuture);
+      chartData.push({ label: "Future", ...futureTotals });
+    }
 
     drawChart(chartData, keys);
 
@@ -115,16 +115,13 @@
         .attr("height", d => y(d[0]) - y(d[1]))
         .attr("width", x.bandwidth());
 
-      // X-axis
       svg.append("g")
         .attr("transform", `translate(0,${height})`)
         .call(d3.axisBottom(x));
 
-      // Y-axis
       svg.append("g")
         .call(d3.axisLeft(y));
 
-      // X-label
       svg.append("text")
         .attr("x", width / 2)
         .attr("y", height + 40)
@@ -132,7 +129,6 @@
         .style("font-size", "14px")
         .text("Energy Scenario");
 
-      // Y-label
       svg.append("text")
         .attr("transform", "rotate(-90)")
         .attr("x", -height / 2)
@@ -141,7 +137,6 @@
         .style("font-size", "14px")
         .text("Annual Energy Consumption (Million BTU)");
 
-      // Legend
       const legend = svg.append("g")
         .attr("transform", `translate(${width + 10}, 0)`);
 
