@@ -392,9 +392,20 @@
             const reader = new FileReader();
             reader.onload = function(e) {
                 const text = e.target.result;
-                const rows = text.split('\n')
+                let rows = text.split('\n')
                     .map(row => row.split(','))
                     .filter(row => row.some(cell => cell.trim() !== '')); // Remove rows where all cells are empty
+                
+                // Remove empty columns
+                if (rows.length > 0) {
+                    const columnHasData = rows[0].map((_, colIndex) => 
+                        rows.some(row => row[colIndex] && row[colIndex].trim() !== '')
+                    );
+                    
+                    rows = rows.map(row => 
+                        row.filter((_, colIndex) => columnHasData[colIndex])
+                    );
+                }
                 
                 const table = document.createElement('table');
                 
@@ -444,9 +455,20 @@
             const reader = new FileReader();
             reader.onload = function(e) {
                 const text = e.target.result;
-                const rows = text.split('\n')
+                let rows = text.split('\n')
                     .map(row => row.split(','))
                     .filter(row => row.some(cell => cell.trim() !== '')); // Remove rows where all cells are empty
+                
+                // Remove empty columns
+                if (rows.length > 0) {
+                    const columnHasData = rows[0].map((_, colIndex) => 
+                        rows.some(row => row[colIndex] && row[colIndex].trim() !== '')
+                    );
+                    
+                    rows = rows.map(row => 
+                        row.filter((_, colIndex) => columnHasData[colIndex])
+                    );
+                }
                 
                 const table = document.createElement('table');
                 
