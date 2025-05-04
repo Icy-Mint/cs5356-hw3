@@ -63,11 +63,6 @@
      onmouseover="this.style.textDecoration='underline'"
      onmouseout="this.style.textDecoration='none'">← Back to Previous Page</a>
 
-<<<<<<< HEAD
-  <h2 id="chartTitle">Annual Energy Breakdown</h2>
-
-  <div id="chart"></div>
-=======
   <h2>Energy Visualization Dashboard</h2>
   
 
@@ -83,7 +78,6 @@
       <div class="chart-title">Monthly Trend: <span id="selected-category">Select a category</span></div>
     </div>
   </div>
->>>>>>> 4cb4f4a404f1dea34c491d5aca60b80411be875a
 
   <script>
     // Load data from local storage
@@ -110,8 +104,22 @@
 
     // Color scheme for consistency across charts
     const colorScale = d3.scaleOrdinal()
-      .domain(keys)
-      .range(d3.schemeCategory10);
+      .domain([
+        "Interior Lighting (MBtu)",
+        "Receptacle Equipment (MBtu)",
+        "Space Heating (MBtu)",
+        "Service Water Heating (MBtu)",
+        "Space Cooling (MBtu)",
+        "Heat Rejection (MBtu)",
+        "Interior Central Fans (MBtu)",
+        "Interior Local Fans (MBtu)",
+        "Exhaust Fans (MBtu)",
+        "Pumps (MBtu)"
+      ])
+      .range([
+        "#fbb4ae", "#ccebc5", "#fb8072", "#ffffb3", "#80b1d3",
+        "#b3cde3", "#bebada", "#fdb462", "#fccde5", "#d9d9d9"
+      ]);
 
     // Parse CSV to get annual totals
     function parseCsvTotals(csvText) {
@@ -231,12 +239,6 @@
         .attr("class", "bar")
         .attr("x", d => x(d.data.label))
         .attr("y", d => y(d[1]))
-<<<<<<< HEAD
-        .attr("height", d => Math.max(0, y(d[0]) - y(d[1]))) //  ensure height ≥ 0
-        .attr("width", x.bandwidth());
-
-
-=======
         .attr("height", d => Math.max(0, y(d[0]) - y(d[1]))) 
         .attr("width", x.bandwidth())
         .attr("stroke", "white")
@@ -254,7 +256,6 @@
         });
         
       // Add axes
->>>>>>> 4cb4f4a404f1dea34c491d5aca60b80411be875a
       svg.append("g")
         .attr("transform", `translate(0,${height})`)
         .call(d3.axisBottom(x))
