@@ -24,7 +24,8 @@
      onmouseover="this.style.textDecoration='underline'"
      onmouseout="this.style.textDecoration='none'">← Back to Previous Page</a>
 
-  <h2>Annual Energy Breakdown</h2>
+  <h2 id="chartTitle">Annual Energy Breakdown</h2>
+
   <div id="chart"></div>
 
   <script>
@@ -114,7 +115,8 @@
         .attr("y", d => y(d[1]))
         .attr("height", d => Math.max(0, y(d[0]) - y(d[1]))) //  ensure height ≥ 0
         .attr("width", x.bandwidth());
-        
+
+
       svg.append("g")
         .attr("transform", `translate(0,${height})`)
         .call(d3.axisBottom(x));
