@@ -120,7 +120,8 @@
         "#fbb4ae", "#ccebc5", "#fb8072", "#ffffb3", "#80b1d3",
         "#b3cde3", "#bebada", "#fdb462", "#fccde5", "#d9d9d9"
       ]);
-
+    // ADDED: Utility to get consistent color for category
+    const categoryColor = category => colorScale(category) || "#888";
     // Parse CSV to get annual totals
     function parseCsvTotals(csvText) {
       const lines = csvText.split("\n").map(l => l.split(","));
@@ -591,7 +592,7 @@
       svg.append("path")
         .datum(currentData)
         .attr("fill", "none")
-        .attr("stroke", "#4285F4") // Google blue
+        .attr("stroke", categoryColor(category)) // CHANGED to match category color
         .attr("stroke-width", 2)
         .attr("d", line);
 
@@ -599,7 +600,8 @@
         svg.append("path")
           .datum(futureData)
           .attr("fill", "none")
-          .attr("stroke", "#EA4335") // Google red
+          .attr("stroke", d3.color(categoryColor(category)).darker(1.2)) // CHANGED: Future is a darker shade
+
           .attr("stroke-width", 2)
           .attr("d", line);
       }
@@ -612,7 +614,7 @@
         .attr("cx", d => x(d.month) + x.bandwidth() / 2)
         .attr("cy", d => y(d.value))
         .attr("r", 4)
-        .attr("fill", "#4285F4");
+        .attr("fill", categoryColor(category)); // CHANGED 
 
       if (futureData) { // Check the assigned futureData variable
         svg.selectAll(".future-point")
@@ -663,7 +665,7 @@
           .attr("y", 20)
           .attr("width", 15)
           .attr("height", 15)
-          .attr("fill", "#EA4335");
+          .attr("fill", d3.color(categoryColor(category)).darker(1.2)); //  CHANGED
 
         legend.append("text")
           .attr("x", 20)
