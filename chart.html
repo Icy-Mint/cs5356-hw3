@@ -413,12 +413,19 @@
         .data(arcData)
         .join("path")
         .attr("class", "slice")
-        .attr("d", arc)
+        // add animated version
         .attr("fill", d => colorScale(d.data.category) || "#ccc")
         .attr("stroke", "#fff")
         .attr("stroke-width", 1.5)
-        .on("click", (event, d) => {
-          if (d.data.category !== "Other") showMonthlyTrend(d.data.category);
+        .each(function(d) { d.endAngle = d.startAngle; }) // start with 0 arc
+        .transition()
+        .duration(1000)
+        .attrTween("d", function(d) {
+          const i = d3.interpolate(d.startAngle, d.endAngle + 0.001); // ensure small gap
+          return function(t) {
+            d.endAngle = i(t);
+            return arc(d);
+          };
         });
 
       // Add % labels only if > 5%
@@ -656,13 +663,24 @@
         .style("font-weight", "500");
 
       // Add lines (Now drawn AFTER seasonal annotations)
-      svg.append("path")
+      // Add animation for line chart 
+      const currentPath = svg.append("path")
         .datum(currentData)
         .attr("fill", "none")
-        .attr("stroke", categoryColor(category)) // CHANGED to match category color
+        .attr("stroke", categoryColor(category))
         .attr("stroke-width", 2)
         .attr("d", line);
 
+      const totalLength = currentPath.node().getTotalLength();
+
+      currentPath
+        .attr("stroke-dasharray", `${totalLength} ${totalLength}`)
+        .attr("stroke-dashoffset", totalLength)
+        .transition()
+        .duration(2000)
+        .ease(d3.easeLinear)
+        .attr("stroke-dashoffset", 0);
+        
       if (futureData) { // Check the assigned futureData variable
         svg.append("path")
           .datum(futureData)
