@@ -59,20 +59,18 @@
     #pie-chart {
       flex: 1 1 400px;
     }
-    /* ADD THIS BELOW to prevent svg verflow*/
     svg {
-      overflow: visible; /* Prevent clipping of axes and legends */
+      overflow: visible; 
     }
 
     #annual-chart {
-      overflow: visible; /* Prevent clipping of chart elements */
+      overflow: visible; 
     }
-    /* ----- dark‑grey axes everywhere ----- */
+  
     .axis path,
     .axis line   { stroke: #555; }
     .axis text   { fill:   #555; }
 
-    /* Project Information Styles */
     .project-info {
       background: #f8f9fa;
       padding: 1.5rem;
@@ -107,6 +105,7 @@
       content: " *";
       color: #dc3545;
     }
+
     @media screen and (max-width: 768px) {
       .info-grid {
         grid-template-columns: 1fr;
@@ -120,7 +119,6 @@
      onmouseout="this.style.textDecoration='none'">← Back to Previous Page</a>
 
   <h2>Energy Visualization Dashboard</h2>
-  <!--  Tooltip container for hover display -->
   <div id="tooltip" style="position: absolute; opacity: 0; background: #fff; padding: 6px 10px; border: 1px solid #ccc; border-radius: 4px; pointer-events: none; font-size: 12px;"></div> 
   <div class="chart-container">
     <div id="annual-chart">
@@ -134,7 +132,6 @@
     </div>
   </div>
 
-  <!-- Project Information Section -->
   <div class="project-info">
     <h3>Project Information</h3>
     <div class="info-grid" id="projectInfoGrid">
@@ -229,40 +226,38 @@
     const annualChartData = [{ label: "Current", ...currentTotals }];
     let futureTotals, futureMonthly;
 
-    // If future data exists in localStorage, use it
+    
     if (rawCsvFuture) {
       futureTotals = parseCsvTotals(rawCsvFuture);
       futureMonthly = parseCsvMonthly(rawCsvFuture);
     } 
-    // Otherwise, create example future data (70% of current as sample efficiency improvement)
+
+    //debugL; cannot find local storage data
     else {
       futureTotals = {};
       keys.forEach(key => {
-        futureTotals[key] = currentTotals[key] * 0.7; // 30% reduction as example
+        futureTotals[key] = currentTotals[key] * 0.7; 
       });
       
       futureMonthly = [];
       currentMonthly.forEach(monthData => {
         const futureMonth = { month: monthData.month };
         keys.forEach(key => {
-          futureMonth[key] = monthData[key] * 0.7; // 30% reduction as example
+          futureMonth[key] = monthData[key] * 0.7; 
         });
         futureMonthly.push(futureMonth);
       });
       
-      console.log("No future data found. Using sample data (70% of current values).");
+      console.log("No future data");
     }
     
-    // Always add future data to chart
+   
     annualChartData.push({ label: "Future", ...futureTotals });
 
-    // Create the vertical stacked bar chart
     drawAnnualChart(annualChartData, keys);
     
-    // Create initial pie chart with Current data
     drawPieChart("Current", currentTotals);
     
-    // Set up placeholder for line chart
     setupLineChart();
 
     // Draw Annual Bar Chart
@@ -304,16 +299,14 @@
             .attr("class", "bar")
       // begin of the fade in animation 
             .attr("x",      d => x(d.data.label))
-            .attr("y",      y(0))                               /* start at baseline for the animation  */
+            .attr("y",      y(0))                              
             .attr("width",  x.bandwidth())
             .attr("height", 0)
             .attr("stroke", "white")
             .attr("stroke-width", 0.5)
-            /* store the category so click‑handler is trivial             */
             .attr("data-category", (d,i,nodes) =>
               d3.select(nodes[i].parentNode).datum().key)       /* ← CHANGED   */
 
-            /* ─── interaction handlers BEFORE the transition ─────────── */
             .on("mouseover", (event, d) => {
               const category = d3.select(event.currentTarget.parentNode).datum().key;
               const val      = (d[1] - d[0]).toFixed(2);
@@ -326,15 +319,12 @@
             .on("mouseout",   () => tooltip.style("opacity", 0))
             .on("click",      event =>
               showMonthlyTrend(event.currentTarget.dataset.category))
-
-            /* ─── grow‑in animation ───────────────────────────────────── */
             .transition()
             .duration(800)
             .delay((d,i) => i * 100)
             .attr("y",      d => y(d[1]))
             .attr("height", d => y(d[0]) - y(d[1]))
 
-        /* ─── optional native <title> tooltip AFTER the transition ───── */
         .selection()                                            /* ← CHANGED   jump back to the rect selection              */
         .append("title")
           .text(function(d){
@@ -343,7 +333,6 @@
           });
         
       // Add axes
-      /* ── X‑axis ────────────────────────────────────────────────── */
       svg.append("g")
       svg.append("g")
         .attr("class", "axis")
@@ -364,7 +353,6 @@
             togglePieChart(d);
           });
 
-      /* ── Y‑axis ─────────────────────────────────────────── */
       svg.append("g")
         .attr("class", "axis")
         .call( d3.axisLeft(y)
