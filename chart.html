@@ -59,6 +59,14 @@
     #pie-chart {
       flex: 1 1 400px;
     }
+    /* ADD THIS BELOW to prevent svg verflow*/
+    svg {
+      overflow: visible; /* Prevent clipping of axes and legends */
+    }
+
+    #annual-chart {
+      overflow: visible; /* Prevent clipping of chart elements */
+    }
   </style>
 </head>
 <body>
@@ -126,25 +134,10 @@
     // ADDED: Utility to get consistent color for category
     const categoryColor = category => colorScale(category) || "#888";
     // Parse CSV to get annual totals
-    function parseCsvTotals(csvText) {                           /* ← CHANGED */
-      const lines   = csvText.trim().split("\n").map(l => l.split(","));
+    function parseCsvTotals(csvText) {
+      const lines = csvText.split("\n").map(l => l.split(","));
       const headers = lines[4].map(h => h.trim());
-
-      // --- try to find an explicit “Total” row first ---
-      let totalRow = lines.find(r => r[0] && /total/i.test(r[0]));   /* ← NEW */
-
-      // --- if no explicit row, compute totals from the month rows ---
-      if (!totalRow) {                                               /* ← NEW */
-        totalRow = Array(headers.length).fill("0");                  /* ← NEW */
-        for (let i = 7; i <= 18 && i < lines.length; i++) {          /* ← NEW */
-          headers.forEach((h, j) => {                                /* ← NEW */
-            if (keys.includes(h)) {                                  /* ← NEW */
-              totalRow[j] = (+totalRow[j] + (+lines[i][j] || 0)).toString();
-            }                                                        /* ← NEW */
-          });                                                        /* ← NEW */
-        }                                                            /* ← NEW */
-      }                                                              /* ← NEW */
-
+      const totalRow = lines[19];
       const totals = {};
       headers.forEach((h, i) => {
         if (keys.includes(h)) {
@@ -221,7 +214,7 @@
 
     // Draw Annual Bar Chart
     function drawAnnualChart(data, keys) {
-      const margin = { top: 40, right: 160, bottom: 60, left: 60 },
+      const margin = { top: 40, right: 200, bottom: 60, left: 60 }, // ← Increased right margin for legend
             width = 800 - margin.left - margin.right,
             height = 450 - margin.top - margin.bottom;
 
