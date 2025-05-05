@@ -71,6 +71,47 @@
     .axis path,
     .axis line   { stroke: #555; }
     .axis text   { fill:   #555; }
+
+    /* Project Information Styles */
+    .project-info {
+      background: #f8f9fa;
+      padding: 1.5rem;
+      border-radius: 8px;
+      margin-top: 1rem;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    .project-info h3 {
+      margin-top: 0;
+      color: #333;
+      font-size: 1.2rem;
+      margin-bottom: 1rem;
+    }
+    .info-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 1rem;
+    }
+    .info-item {
+      margin-bottom: 0.5rem;
+    }
+    .info-label {
+      font-weight: 600;
+      color: #555;
+      font-size: 0.9rem;
+    }
+    .info-value {
+      color: #333;
+      font-size: 0.9rem;
+    }
+    .required::after {
+      content: " *";
+      color: #dc3545;
+    }
+    @media screen and (max-width: 768px) {
+      .info-grid {
+        grid-template-columns: 1fr;
+      }
+    }
   </style>
 </head>
 <body>
@@ -90,6 +131,14 @@
     </div>
     <div id="line-chart">
       <div class="chart-title">Monthly Trend: <span id="selected-category">Select a category</span></div>
+    </div>
+  </div>
+
+  <!-- Project Information Section -->
+  <div class="project-info">
+    <h3>Project Information</h3>
+    <div class="info-grid" id="projectInfoGrid">
+      <!-- Project information will be populated here -->
     </div>
   </div>
 
@@ -849,6 +898,55 @@
         window.toggleButtonsAdded = true;
       }*/
     }
+
+    // Add this at the beginning of your script section
+    function displayProjectInfo() {
+      const projectInfo = {
+        'Project Name': localStorage.getItem('projectName'),
+        'Project Sqft': localStorage.getItem('projectSqft'),
+        'Project ID (AIA)': localStorage.getItem('projectId'),
+        'Climate Zone': localStorage.getItem('climateZone'),
+        'Project Category': localStorage.getItem('projectCategory'),
+        'Construction Type': localStorage.getItem('constructionType'),
+        'Project Phase': localStorage.getItem('projectPhase'),
+        'Year of Occupancy': localStorage.getItem('yearOccupancy'),
+        'LEED Version': localStorage.getItem('leedVersion'),
+        'Target Certification': localStorage.getItem('targetCertification'),
+        'Country': localStorage.getItem('country'),
+        'State/Province': localStorage.getItem('stateProvince'),
+        'Zip Code': localStorage.getItem('zipCode'),
+        'City': localStorage.getItem('city'),
+        'Design Energy Code': localStorage.getItem('designEnergyCode'),
+        'Metered Energy Use Data': localStorage.getItem('meteredData'),
+        'Energy Modeling Tool': localStorage.getItem('energyModelingTool'),
+        'Target EUI': localStorage.getItem('targetEUI')
+      };
+
+      const infoGrid = document.getElementById('projectInfoGrid');
+      infoGrid.innerHTML = '';
+
+      Object.entries(projectInfo).forEach(([label, value]) => {
+        if (value) { // Only show fields that have values
+          const infoItem = document.createElement('div');
+          infoItem.className = 'info-item';
+          
+          const infoLabel = document.createElement('div');
+          infoLabel.className = 'info-label';
+          infoLabel.textContent = label;
+          
+          const infoValue = document.createElement('div');
+          infoValue.className = 'info-value';
+          infoValue.textContent = value;
+          
+          infoItem.appendChild(infoLabel);
+          infoItem.appendChild(infoValue);
+          infoGrid.appendChild(infoItem);
+        }
+      });
+    }
+
+    // Call this function when the page loads
+    displayProjectInfo();
   </script>
 </body>
 </html>

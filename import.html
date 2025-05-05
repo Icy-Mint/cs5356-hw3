@@ -700,6 +700,35 @@
         return;
       }
 
+      // Store form data in localStorage
+      const formData = {
+        projectName: document.getElementById('projectName').value,
+        projectSqft: document.getElementById('projectSqft').value,
+        projectId: document.getElementById('projectId').value,
+        climateZone: document.getElementById('climateZone').value,
+        projectCategory: document.getElementById('projectCategory').value,
+        constructionType: document.getElementById('constructionType').value,
+        projectPhase: document.getElementById('projectPhase').value,
+        yearOccupancy: document.getElementById('yearOccupancy').value,
+        leedVersion: document.getElementById('leedVersion').value,
+        targetCertification: document.getElementById('targetCertification').value,
+        country: document.getElementById('country').value,
+        stateProvince: document.getElementById('stateProvince').value,
+        zipCode: document.getElementById('zipCode').value,
+        city: document.getElementById('city').value,
+        designEnergyCode: document.getElementById('designEnergyCode').value,
+        meteredData: document.getElementById('meteredData').value,
+        energyModelingTool: document.getElementById('energyModelingTool').value,
+        targetEUI: document.getElementById('targetEUI').value
+      };
+
+      // Store each form field in localStorage
+      Object.entries(formData).forEach(([key, value]) => {
+        if (value) { // Only store non-empty values
+          localStorage.setItem(key, value);
+        }
+      });
+
       const currentFile = document.getElementById('currentCsvFile').files[0];
       if (!currentFile) {
         alert('Please upload the current CSV file');
@@ -723,7 +752,6 @@
             window.location.href = "chart.html";
         };
         reader2.readAsText(futureFile);
-
       };
       reader.readAsText(currentFile);
     });
