@@ -9,7 +9,7 @@
     body {
       font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; /* ← CHANGED */
       margin: 2rem;
-      line-height: 1.6;  /* ← ADDED */
+      line-height: 1.6; 
       color: #222;       /* ← ADDED for improved text contrast */
     }
     .chart-container {
@@ -94,7 +94,7 @@
   </div>
 
   <script>
-    // Load data from local storage
+
     const rawCsvCurrent = localStorage.getItem("iesveCsvData");
     const rawCsvFuture = localStorage.getItem("iesveFutureCsvData");
     const tooltip = d3.select("#tooltip"); // This line initializes the tooltip reference
@@ -137,7 +137,7 @@
       ]);
     // ADDED: Utility to get consistent color for category
     const categoryColor = category => colorScale(category) || "#888";
-    // Parse CSV to get annual totals
+    // Parse CSV here
     function parseCsvTotals(csvText) {
       const lines = csvText.split("\n").map(l => l.split(","));
       const headers = lines[4].map(h => h.trim());
@@ -435,33 +435,47 @@
 
       const arcData = pie(pieData);
 
-      // Draw slices
+      // animations to draw slices of the pie chart
       svg.selectAll(".slice")
         .data(arcData)
         .join("path")
         .attr("class", "slice")
-        // add animated version
+        .attr("d", arc)
         .attr("fill", d => colorScale(d.data.category) || "#ccc")
         .attr("stroke", "#fff")
         .attr("stroke-width", 1.5)
-        .each(function(d) { d.endAngle = d.startAngle; }) // start with 0 arc
+        .each(function(d) { this._current = d; })
         .transition()
         .duration(1000)
         .attrTween("d", function(d) {
-          const i = d3.interpolate(d.startAngle, d.endAngle + 0.001); // ensure small gap
+          const interpolate = d3.interpolate(
+            { startAngle: d.startAngle, endAngle: d.startAngle },
+            { startAngle: d.startAngle, endAngle: d.endAngle }
+          );
           return function(t) {
-            d.endAngle = i(t);
-            return arc(d);
+            return arc(interpolate(t));
           };
-        });
+        })
+        .selection() 
+        .style("cursor", "pointer") 
+        .on("mouseover", (event, d) => {
+          tooltip.style("opacity", 1)
+                .html(`<strong>${d.data.category}</strong><br>${dataType}: ${d.data.value.toFixed(2)}&nbsp;MBtu`);
+        })
+        .on("mousemove", event => 
+          tooltip.style("left", (event.pageX + 10) + "px")
+                .style("top", (event.pageY - 28) + "px"))
+        .on("mouseout", () => tooltip.style("opacity", 0))
+        .on("click", (event, d) => showMonthlyTrend(d.data.category)); //click to see monthly trend on the pie chart as well.
 
-      // Add % labels only if > 5%
-      svg.selectAll(".label")
-        .style("font-size", "11px")    // ← Set uniform readable size
-        .style("fill", "#333")         // ← Changed for contrast
-        .style("font-weight", "500")  // ← Added for better legibility
+      // optimizatin: Add % labels only if > 5%
+      svg.selectAll(".pie-label")
         .data(arcData)
         .join("text")
+        .attr("class", "pie-label")
+        .style("font-size", "11px")
+        .style("fill", "#333")
+        .style("font-weight", "500")
         .attr("transform", d => `translate(${arc.centroid(d)})`)
         .attr("dy", ".35em")
         .attr("text-anchor", "middle")
@@ -472,7 +486,7 @@
           return percent >= 5 ? `${percent.toFixed(1)}%` : "";
         });
 
-      // Add total in center
+      //label the center 
       svg.append("text")
         .attr("text-anchor", "middle")
         .attr("dy", "0.35em")
@@ -484,14 +498,14 @@
       svg.append("text")
         .attr("text-anchor", "middle")
         .attr("dy", "0.35em")
-        .style("font-size", "14px")           // ← Larger and stronger
+        .style("font-size", "14px")
         .style("font-weight", "bold")
-        .style("fill", "#444");              // ← Dark gray instead of black
+        .style("fill", "#444");
 
     }
 
 
-    // Setup Line Chart
+    // Line Chart as the montly trend breakdown
     function setupLineChart() {
       const margin = { top: 20, right: 60, bottom: 60, left: 60 },
             width = 800 - margin.left - margin.right,
@@ -531,7 +545,6 @@
         .append("g")
         .attr("transform", `translate(${margin.left},${margin.top})`);
 
-      // Prepare data for both current and future if available
       const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 
       const currentData = currentMonthly.map(d => ({
@@ -541,10 +554,10 @@
       }));
 
       let combinedData = [...currentData];
-      let futureData = null; // Initialize futureData
+      let futureData = null; 
 
       if (futureMonthly) {
-        futureData = futureMonthly.map(d => ({ // Assign to futureData
+        futureData = futureMonthly.map(d => ({ 
           month: d.month,
           value: d[category] || 0,
           type: 'Future'
@@ -552,7 +565,6 @@
         combinedData = [...currentData, ...futureData];
       }
 
-      // Create scales
       const x = d3.scaleBand()
         .domain(monthNames)
         .range([0, width])
@@ -561,53 +573,49 @@
       const y = d3.scaleLinear()
         .domain([0, d3.max(combinedData, d => d.value) * 1.1])
         .range([height, 0]);
-      /* ---------- colour palette for this category ---------- */
-      const baseColor    = categoryColor(category);          // bar‑chart colour
-      const futureColor  = baseColor;                        // exact match
-      const currentColor = d3.color(baseColor)               // darker shade
+//hardcoded seasonal colors
+      const baseColor    = categoryColor(category);          
+      const futureColor  = baseColor;                       
+      const currentColor = d3.color(baseColor)               
                             .darker(1.3)
                             .formatHex();                   // ← ensures string
-      /* ------------------------------------------------------ */
-      // Add seasonal annotations (Now drawn BEFORE axes/lines/points)
+
       const heatingStartMonth = "Oct";
       const heatingEndMonth = "Apr";
       const coolingStartMonth = "May";
       const coolingEndMonth = "Sep";
 
-      // Calculate correct start/end positions based on band boundaries
+
       const heatingStartX_Oct = x(heatingStartMonth);
       const heatingEndX_Apr = x(heatingEndMonth) + x.bandwidth();
       const coolingStartX_May = x(coolingStartMonth);
       const coolingEndX_Sep = x(coolingEndMonth) + x.bandwidth();
 
-      // --- Heating Season ---
-      // Background Shading (Part 1: Oct-Dec)
+
       svg.append("rect")
         .attr("x", heatingStartX_Oct)
         .attr("y", 0)
         .attr("width", width - heatingStartX_Oct)
         .attr("height", height)
         .attr("fill", "blue")
-        .attr("opacity", 0.03) // Increased opacity
+        .attr("opacity", 0.03) 
         .attr("stroke", "blue")
-        .attr("stroke-opacity", 0.08) // Increased opacity
+        .attr("stroke-opacity", 0.08) 
         .attr("stroke-width", 1);
 
-      // Background Shading (Part 2: Jan-Apr)
       svg.append("rect")
         .attr("x", 0)
         .attr("y", 0)
         .attr("width", heatingEndX_Apr)
         .attr("height", height)
         .attr("fill", "blue")
-        .attr("opacity", 0.03) // Increased opacity
+        .attr("opacity", 0.03) 
         .attr("stroke", "blue")
-        .attr("stroke-opacity", 0.08) // Increased opacity
+        .attr("stroke-opacity", 0.08)
         .attr("stroke-width", 1);
 
-      // Heating Label
       const heatingLabel = svg.append("g");
-      heatingLabel.append("rect") // Background rect first
+      heatingLabel.append("rect") 
         .attr("x", 5)
         .attr("y", -30)
         .attr("width", 110)
@@ -616,7 +624,7 @@
         .attr("stroke", "blue")
         .attr("stroke-width", 1)
         .attr("rx", 4);
-      heatingLabel.append("text") // Text on top
+      heatingLabel.append("text") 
         .attr("x", 10)
         .attr("y", -15)
         .attr("fill", "blue")
@@ -624,24 +632,22 @@
         .style("font-weight", "bold")
         .text("Heating Season");
 
-
-      // --- Cooling Season ---
-      // Background Shading (May-Sep)
+//cooling season
       svg.append("rect")
         .attr("x", coolingStartX_May)
         .attr("y", 0)
         .attr("width", coolingEndX_Sep - coolingStartX_May)
         .attr("height", height)
         .attr("fill", "red")
-        .attr("opacity", 0.08) // Increased opacity
+        .attr("opacity", 0.08) 
         .attr("stroke", "red")
-        .attr("stroke-opacity", 0.15) // Increased opacity
+        .attr("stroke-opacity", 0.15) 
         .attr("stroke-width", 1);
 
       // Cooling Label
       const coolingLabel = svg.append("g");
       const coolingLabelX = coolingStartX_May + 5;
-      coolingLabel.append("rect") // Background rect first
+      coolingLabel.append("rect") 
         .attr("x", coolingLabelX)
         .attr("y", -30)
         .attr("width", 110)
@@ -650,7 +656,7 @@
         .attr("stroke", "red")
         .attr("stroke-width", 1)
         .attr("rx", 4);
-      coolingLabel.append("text") // Text on top
+      coolingLabel.append("text") 
         .attr("x", coolingLabelX + 5)
         .attr("y", -15)
         .attr("fill", "red")
@@ -659,7 +665,7 @@
         .text("Cooling Season");
 
 
-      // --- Vertical Transition Lines ---
+      // Vertical Transition Lines
       const seasonTransitions = ["May", "Oct"];
       seasonTransitions.forEach(month => {
         const monthX = x(month);
@@ -672,17 +678,15 @@
           .attr("stroke-width", 1.5)
           .attr("stroke-dasharray", "4,4");
       });
-      // --- END OF MOVED SEASONAL ANNOTATIONS ---
 
 
-      // Create line generators (can stay here)
+
       const line = d3.line()
         .x(d => x(d.month) + x.bandwidth() / 2)
         .y(d => y(d.value))
         .curve(d3.curveBasis); // Apply curveBasis for smooth lines
 
-      // Add axes (Now drawn AFTER seasonal annotations)
-      /* ── X‑axis ─────────────────────────────────────────── */
+      // Add axes 
       svg.append("g")
         .attr("class", "axis")
         .attr("transform", `translate(0,${height})`)
@@ -694,11 +698,11 @@
           .style("font-weight", "500")
           .style("fill", "#555");
 
-      /* ── Y‑axis ─────────────────────────────────────────── */
+
       svg.append("g")
         .attr("class", "axis")
         .call( d3.axisLeft(y)
-                .ticks(6)            // adjust if you prefer more/less ticks
+                .ticks(6)            
                 .tickSize(6)
                 .tickSizeOuter(0) )
         .selectAll("text")
@@ -706,8 +710,7 @@
           .style("font-weight", "500")
           .style("fill", "#555");
 
-      // Add lines (Now drawn AFTER seasonal annotations)
-      // Add animation for line chart 
+      // Add lines 
       const currentPath = svg.append("path")
         .datum(currentData)
         .attr("fill", "none")
@@ -725,17 +728,17 @@
         .ease(d3.easeLinear)
         .attr("stroke-dashoffset", 0);
 
-      if (futureData) { // Check the assigned futureData variable
+      if (futureData) { 
         svg.append("path")
           .datum(futureData)
           .attr("fill", "none")
-          .attr("stroke", futureColor)// CHANGED: Future is a darker shade
+          .attr("stroke", futureColor)
 
           .attr("stroke-width", 2)
           .attr("d", line);
       }
 
-      // Add points (Now drawn AFTER seasonal annotations)
+      // Add points 
       svg.selectAll(".current-point")
         .data(currentData)
         .join("circle")
@@ -743,11 +746,11 @@
         .attr("cx", d => x(d.month) + x.bandwidth() / 2)
         .attr("cy", d => y(d.value))
         .attr("r", 4)
-        .attr("fill", currentColor) // Matches category color
-        .attr("stroke", "#333")                 //  outlines for better visibility
+        .attr("fill", currentColor) 
+        .attr("stroke", "#333")                
         .attr("stroke-width", 0.5);
 
-      if (futureData) { // Check the assigned futureData variable
+      if (futureData) { 
         svg.selectAll(".future-point")
           .data(futureData)
           .join("circle")
@@ -758,7 +761,7 @@
           .attr("r", 4);
       }
 
-      // Add axis labels (can stay here)
+      // Add axis labels 
       svg.append("text")
         .attr("x", width / 2)
         .attr("y", height + 40)
@@ -774,16 +777,14 @@
         .style("font-size", "14px")
         .text("Energy Consumption (MBtu)");
 
-      // Add legend (can stay here)
-      /* -------- legend in right gutter -------------------------------- */
+      // Add legend 
       const legend = svg.append("g")
         .attr("transform", `translate(${width + 20}, 0)`);   // outside plot
 
-      // swatch‑size & spacing
       const sw = 15, gap = 8;
 
-      /* Current */
-      legend.append("rect")
+
+      legend.append("rect") 
         .attr("width", sw)
         .attr("height", sw)
         .attr("fill", currentColor);
@@ -796,8 +797,7 @@
         .style("fill", "#555")
         .text("Current");
 
-      /* Future */
-      if (futureData) {
+      if (futureData) {  
         legend.append("rect")
           .attr("y", sw + gap)
           .attr("width", sw)
@@ -812,7 +812,7 @@
           .style("fill", "#555")
           .text("Future");
       }
-      /* ---------------------------------------------------------------- */
+
     }
     // Toggle Pie Chart between Current and Future
     function togglePieChart(dataType) {
@@ -834,15 +834,14 @@
         }
       }
       
-      // Add direct toggle buttons for easier switching
+      // take out the direct toggle button
       /*if (!window.toggleButtonsAdded) {
         const container = document.getElementById("pie-chart");
         const buttonDiv = document.createElement("div");
         buttonDiv.style.textAlign = "center";
         buttonDiv.style.marginTop = "10px";
         
-      
-        
+    
         buttonDiv.appendChild(currentBtn);
         buttonDiv.appendChild(futureBtn);
         container.appendChild(buttonDiv);
