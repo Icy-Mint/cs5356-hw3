@@ -17,6 +17,39 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>SmartWatts</title> 
     <link rel="stylesheet" href="style.css">
+    <style>
+        .import-btn {
+            background: #333;
+            color: #fff;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 1rem;
+            width: 100%;
+            margin-top: 1rem;
+            transition: background-color 0.3s ease;
+        }
+        .import-btn:hover {
+            background: #444;
+        }
+        .data-btn {
+            background: #333;
+            color: #fff;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 1rem;
+            width: 100%;
+            max-width: 200px;
+            margin: 1rem 0;
+            transition: background-color 0.3s ease;
+        }
+        .data-btn:hover {
+            background: #444;
+        }
+    </style>
 </head>
 <body>
 
@@ -75,7 +108,7 @@
         <!-- ================= NYC Energy Usage Data ================= -->
         <section>
             <h2>NYC Energy Usage Data Benchmarking</h2>
-            <button id="fetchDataBtn">Load NYC Energy Data</button>
+            <button id="fetchDataBtn" class="data-btn">Load NYC Energy Data</button>
             <div id="results"></div>
         </section>
         <!-- ================= Contact Us Form (Mailto) ================= -->
