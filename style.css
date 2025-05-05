@@ -83,6 +83,14 @@ main {
     justify-content: center;
     align-items: center;
 }
+.chart-container {
+    gap: 2.5rem; /* ← slightly increased gap between charts */
+    margin-top: 2.5rem; /* ← added spacing between header and charts */
+  }
+  #annual-chart {
+    margin-bottom: 2.5rem; /* ← clearer separation from other content */
+  }
+  
 
 /*  Graph Section Layout */
 .graph-section {

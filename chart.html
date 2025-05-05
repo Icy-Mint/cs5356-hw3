@@ -7,8 +7,10 @@
   <script src="https://d3js.org/d3.v7.min.js"></script>
   <style>
     body {
-      font-family: Arial, sans-serif;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; /* ← CHANGED */
       margin: 2rem;
+      line-height: 1.6;  /* ← ADDED */
+      color: #222;       /* ← ADDED for improved text contrast */
     }
     .chart-container {
       display: flex;
@@ -29,16 +31,17 @@
       stroke-width: 1px;
     }
     .category-title {
-      font-weight: bold;
-      font-size: 1.2rem;
-      margin-bottom: 1rem;
+      font-weight: 600;           /* ← CHANGED */
+      font-size: 1.4rem;          /* ← CHANGED */
+      margin-bottom: 1.5rem;      /* ← CHANGED */
       text-align: center;
     }
     .chart-title {
-      font-weight: bold;
-      font-size: 1.2rem;
-      margin-bottom: 1rem;
+      font-weight: 600;           /* ← CHANGED from bold */
+      font-size: 1.4rem;          /* ← CHANGED from 1.2rem */
+      margin-bottom: 1.5rem;      /* ← CHANGED for better spacing */
       text-align: center;
+      color: #2a2a2a;             /* ← ADDED for subtle emphasis */
     }
     .bar, .pie-slice {
       cursor: pointer;
@@ -262,16 +265,18 @@
         .call(d3.axisBottom(x))
         .selectAll("text")
         .style("cursor", "pointer")
-        .style("font-weight", "bold")
-        .style("font-size", "12px")
+        .style("font-weight", "500")           // Slightly larger 
+        .style("font-size", "13px")            // Clearer weight for legibility
         .on("click", function(event, d) {
-          // Make the click target more clear
           d3.select(this).style("fill", "red").transition().duration(500).style("fill", "black");
           togglePieChart(d);
         });
 
       svg.append("g")
-        .call(d3.axisLeft(y));
+        .call(d3.axisLeft(y))
+        .selectAll("text")                    // ← Add 
+        .style("font-size", "13px")
+        .style("font-weight", "500");
 
       // Add axis labels
       svg.append("text")
@@ -310,9 +315,10 @@
         legendItem.append("text")
           .attr("x", 20)
           .attr("y", 11)
-          .attr("font-size", "13px")
-          .attr("fill", "#333")
-          .style("font-family", "sans-serif")
+          .attr("font-size", "13px")     // ← Slightly increased
+          .attr("fill", "#333")          // ← Changed from default black
+          .style("font-family", "sans-serif") // ← Ensure clean sans serif
+          .style("font-weight", "500")   // ← New: medium weight for clarity
           .text(key);
       });
 
@@ -394,6 +400,9 @@
 
       // Add % labels only if > 5%
       svg.selectAll(".label")
+        .style("font-size", "11px")    // ← Set uniform readable size
+        .style("fill", "#333")         // ← Changed for contrast
+        .style("font-weight", "500");  // ← Added for better legibility
         .data(arcData)
         .join("text")
         .attr("transform", d => `translate(${arc.centroid(d)})`)
@@ -417,10 +426,11 @@
 
       svg.append("text")
         .attr("text-anchor", "middle")
-        .attr("dy", "1.7em")
-        .style("font-size", "12px")
-        .style("fill", "#777")
-        .text(`${total.toFixed(0)} MBtu`);
+        .attr("dy", "0.35em")
+        .style("font-size", "14px")           // ← Larger and stronger
+        .style("font-weight", "bold")
+        .style("fill", "#444");              // ← Dark gray instead of black
+
     }
 
 
@@ -609,11 +619,17 @@
 
       // Add axes (Now drawn AFTER seasonal annotations)
       svg.append("g")
-        .attr("transform", `translate(0,${height})`)
-        .call(d3.axisBottom(x));
+        .attr("transform", `translate(0,${height})`)  // Repeat the same styling for x and y axes of the line chart.
+        .call(d3.axisBottom(x))
+        .selectAll("text")
+        .style("font-size", "13px")
+        .style("font-weight", "500");
 
       svg.append("g")
-        .call(d3.axisLeft(y));
+        .call(d3.axisLeft(y))
+        .selectAll("text")
+        .style("font-size", "13px")
+        .style("font-weight", "500");
 
       // Add lines (Now drawn AFTER seasonal annotations)
       svg.append("path")
