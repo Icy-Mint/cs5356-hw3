@@ -218,9 +218,9 @@
 
     // Draw Annual Bar Chart
     function drawAnnualChart(data, keys) {
-      const margin = { top: 40, right: 200, bottom: 60, left: 60 }, // ← Increased right margin for legend
+      const margin = { top: 40, right: 140, bottom: 60, left: 60 }, // ← Increased right margin for legend
             width = 800 - margin.left - margin.right,
-            height = 450 - margin.top - margin.bottom;
+            height = 300 - margin.top - margin.bottom;
 
       const svg = d3.select("#annual-chart")
         .append("svg")
@@ -609,7 +609,7 @@
       const heatingLabel = svg.append("g");
       heatingLabel.append("rect") // Background rect first
         .attr("x", 5)
-        .attr("y", 5)
+        .attr("y", -30)
         .attr("width", 110)
         .attr("height", 22)
         .attr("fill", "white")
@@ -618,7 +618,7 @@
         .attr("rx", 4);
       heatingLabel.append("text") // Text on top
         .attr("x", 10)
-        .attr("y", 20)
+        .attr("y", -15)
         .attr("fill", "blue")
         .style("font-size", "12px")
         .style("font-weight", "bold")
@@ -643,7 +643,7 @@
       const coolingLabelX = coolingStartX_May + 5;
       coolingLabel.append("rect") // Background rect first
         .attr("x", coolingLabelX)
-        .attr("y", 5)
+        .attr("y", -30)
         .attr("width", 110)
         .attr("height", 22)
         .attr("fill", "white")
@@ -652,7 +652,7 @@
         .attr("rx", 4);
       coolingLabel.append("text") // Text on top
         .attr("x", coolingLabelX + 5)
-        .attr("y", 20)
+        .attr("y", -15)
         .attr("fill", "red")
         .style("font-size", "12px")
         .style("font-weight", "bold")
@@ -775,36 +775,44 @@
         .text("Energy Consumption (MBtu)");
 
       // Add legend (can stay here)
+      /* -------- legend in right gutter -------------------------------- */
       const legend = svg.append("g")
-        .attr("transform", `translate(${width - 100}, 0)`);
+        .attr("transform", `translate(${width + 20}, 0)`);   // outside plot
 
+      // swatch‑size & spacing
+      const sw = 15, gap = 8;
+
+      /* Current */
       legend.append("rect")
-        .attr("x", 0)
-        .attr("y", 0)
-        .attr("fill", currentColor)
-        .attr("width", 15)
-        .attr("height", 15);
+        .attr("width", sw)
+        .attr("height", sw)
+        .attr("fill", currentColor);
 
       legend.append("text")
-        .attr("x", 20)
-        .attr("y", 12)
+        .attr("x", sw + gap)
+        .attr("y", sw - 3)
+        .style("font-size", "13px")
+        .style("font-weight", "500")
+        .style("fill", "#555")
         .text("Current");
 
-      if (futureData) { // Check the assigned futureData variable
+      /* Future */
+      if (futureData) {
         legend.append("rect")
-          .attr("x", 0)
-          .attr("y", 20)
-          .attr("width", 15)
-          .attr("height", 15)
-          .attr("fill", futureColor);   
+          .attr("y", sw + gap)
+          .attr("width", sw)
+          .attr("height", sw)
+          .attr("fill", futureColor);
 
         legend.append("text")
-          .attr("x", 20)
-          .attr("y", 32)
+          .attr("x", sw + gap)
+          .attr("y", sw * 2 + gap - 3)
+          .style("font-size", "13px")
+          .style("font-weight", "500")
+          .style("fill", "#555")
           .text("Future");
       }
-    }
-
+      /* ---------------------------------------------------------------- */
     // Toggle Pie Chart between Current and Future
     function togglePieChart(dataType) {
       console.log("Toggle requested for:", dataType);
