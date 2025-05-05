@@ -67,6 +67,10 @@
     #annual-chart {
       overflow: visible; /* Prevent clipping of chart elements */
     }
+    /* ----- dark‑grey axes everywhere ----- */
+    .axis path,
+    .axis line   { stroke: #555; }
+    .axis text   { fill:   #555; }
   </style>
 </head>
 <body>
@@ -290,23 +294,33 @@
           });
         
       // Add axes
+      /* ── X‑axis ────────────────────────────────────────────────── */
       svg.append("g")
-        .attr("transform", `translate(0,${height})`)
-        .call(d3.axisBottom(x))
-        .selectAll("text")
-        .style("cursor", "pointer")
-        .style("font-weight", "500")           // Slightly larger 
-        .style("font-size", "13px")            // Clearer weight for legibility
-        .on("click", function(event, d) {
-          d3.select(this).style("fill", "red").transition().duration(500).style("fill", "black");
-          togglePieChart(d);
-        });
+          .attr("class", "axis")                    // ← ADDED
+          .attr("transform", `translate(0,${height})`)
+          .call(d3.axisBottom(x))
+          .selectAll("text")
+            .style("cursor", "pointer")
+            .style("font-weight", "500")
+            .style("font-size", "13px")
+            .style("fill", "#555")                  // ← NEW: dark‑grey
+            .on("click", function (event, d) {
+              // flash red, then fade back to dark‑grey
+              d3.select(this)
+                .style("fill", "red")
+                .transition().duration(500)
+                .style("fill", "#555");
+              togglePieChart(d);
+            });
 
+      /* ── Y‑axis ────────────────────────────────────────────────── */
       svg.append("g")
-        .call(d3.axisLeft(y))
-        .selectAll("text")                    // ← Add 
-        .style("font-size", "13px")
-        .style("font-weight", "500");
+          .attr("class", "axis")                    // ← ADDED
+          .call(d3.axisLeft(y))
+          .selectAll("text")
+            .style("font-size", "13px")
+            .style("font-weight", "500")
+            .style("fill", "#555");                 // ← NEW: dark‑grey
 
       // Add axis labels
       svg.append("text")
@@ -314,6 +328,7 @@
         .attr("y", height + 40)
         .attr("text-anchor", "middle")
         .style("font-size", "14px")
+        .style("fill", "#555")
         .text("Energy Scenario");
 
       svg.append("text")
@@ -322,6 +337,7 @@
         .attr("y", -40)
         .attr("text-anchor", "middle")
         .style("font-size", "14px")
+        .style("fill", "#555")
         .text("Annual Energy Consumption (Million BTU)");
 
       // Add legend
@@ -339,14 +355,14 @@
           .attr("height", 14)
           .attr("rx", 3)  // Rounded corners
           .attr("fill", colorScale(key))
-          .attr("stroke", "#333")
+          .attr("stroke", "#555")
           .attr("stroke-width", 0.5);
 
         legendItem.append("text")
           .attr("x", 20)
           .attr("y", 11)
           .attr("font-size", "13px")     // ← Slightly increased
-          .attr("fill", "#333")          // ← Changed from default black
+          .attr("fill", "#555")          // ← Changed from default black
           .style("font-family", "sans-serif") // ← Ensure clean sans serif
           .style("font-weight", "500")   // ← New: medium weight for clarity
           .text(key);
