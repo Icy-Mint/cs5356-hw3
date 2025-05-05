@@ -296,32 +296,36 @@
       // Add axes
       /* ── X‑axis ────────────────────────────────────────────────── */
       svg.append("g")
-          .attr("class", "axis")                    // ← ADDED
-          .attr("transform", `translate(0,${height})`)
-          .call(d3.axisBottom(x))
-          .selectAll("text")
-            .style("cursor", "pointer")
-            .style("font-weight", "500")
-            .style("font-size", "13px")
-            .style("fill", "#555")                  // ← NEW: dark‑grey
-            .on("click", function (event, d) {
-              // flash red, then fade back to dark‑grey
-              d3.select(this)
-                .style("fill", "red")
-                .transition().duration(500)
-                .style("fill", "#555");
-              togglePieChart(d);
-            });
-
-      /* ── Y‑axis ────────────────────────────────────────────────── */
       svg.append("g")
-          .attr("class", "axis")                    // ← ADDED
-          .call(d3.axisLeft(y))
-          .selectAll("text")
-            .style("font-size", "13px")
-            .style("font-weight", "500")
-            .style("fill", "#555");                 // ← NEW: dark‑grey
+        .attr("class", "axis")
+        .attr("transform", `translate(0,${height})`)
+        .call( d3.axisBottom(x)
+                .tickSize(6)        // inner ticks = 6 px
+                .tickSizeOuter(0) ) // no outer ticks
+        .selectAll("text")
+          .style("cursor", "pointer")
+          .style("font-size", "13px")
+          .style("font-weight", "500")
+          .style("fill", "#555")     // dark‑grey
+          .on("click", function (event, d) {
+            d3.select(this)
+              .style("fill", "red")
+              .transition().duration(500)
+              .style("fill", "#555");
+            togglePieChart(d);
+          });
 
+      /* ── Y‑axis ─────────────────────────────────────────── */
+      svg.append("g")
+        .attr("class", "axis")
+        .call( d3.axisLeft(y)
+                .ticks(6)
+                .tickSize(6)
+                .tickSizeOuter(0) )
+        .selectAll("text")
+          .style("font-size", "13px")
+          .style("font-weight", "500")
+          .style("fill", "#555");
       // Add axis labels
       svg.append("text")
         .attr("x", width / 2)
@@ -672,18 +676,29 @@
         .curve(d3.curveBasis); // Apply curveBasis for smooth lines
 
       // Add axes (Now drawn AFTER seasonal annotations)
+      /* ── X‑axis ─────────────────────────────────────────── */
       svg.append("g")
-        .attr("transform", `translate(0,${height})`)  // Repeat the same styling for x and y axes of the line chart.
-        .call(d3.axisBottom(x))
+        .attr("class", "axis")
+        .attr("transform", `translate(0,${height})`)
+        .call( d3.axisBottom(x)
+                .tickSize(6)
+                .tickSizeOuter(0) )
         .selectAll("text")
-        .style("font-size", "13px")
-        .style("font-weight", "500");
+          .style("font-size", "13px")
+          .style("font-weight", "500")
+          .style("fill", "#555");
 
+      /* ── Y‑axis ─────────────────────────────────────────── */
       svg.append("g")
-        .call(d3.axisLeft(y))
+        .attr("class", "axis")
+        .call( d3.axisLeft(y)
+                .ticks(6)            // adjust if you prefer more/less ticks
+                .tickSize(6)
+                .tickSizeOuter(0) )
         .selectAll("text")
-        .style("font-size", "13px")
-        .style("font-weight", "500");
+          .style("font-size", "13px")
+          .style("font-weight", "500")
+          .style("fill", "#555");
 
       // Add lines (Now drawn AFTER seasonal annotations)
       // Add animation for line chart 
