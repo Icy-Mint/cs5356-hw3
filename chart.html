@@ -702,34 +702,36 @@
 
       // Add lines (Now drawn AFTER seasonal annotations)
       // Add animation for line chart 
+      // ------------------------------------------------------------------
+      // 1. pick colours once
+      // ------------------------------------------------------------------
+      const baseColor    = categoryColor(category);            // palette colour
+      const currentColor = d3.color(baseColor).darker(1.3);    // darker for Current
+      const futureColor  = baseColor;                          // exact match for Future
+
+      // ------------------------------------------------------------------
+      // 2. lines
+      // ------------------------------------------------------------------
       const currentPath = svg.append("path")
         .datum(currentData)
         .attr("fill", "none")
-        .attr("stroke", categoryColor(category))
+        .attr("stroke", currentColor)          // ← use darker tone
         .attr("stroke-width", 2)
         .attr("d", line);
 
-      const totalLength = currentPath.node().getTotalLength();
-
-      currentPath
-        .attr("stroke-dasharray", `${totalLength} ${totalLength}`)
-        .attr("stroke-dashoffset", totalLength)
-        .transition()
-        .duration(2000)
-        .ease(d3.easeLinear)
-        .attr("stroke-dashoffset", 0);
-
-      if (futureData) { // Check the assigned futureData variable
+      …
+      if (futureData) {
         svg.append("path")
           .datum(futureData)
           .attr("fill", "none")
-          .attr("stroke", d3.color(categoryColor(category)).darker(1.2)) // CHANGED: Future is a darker shade
-
+          .attr("stroke", futureColor)         // ← palette colour
           .attr("stroke-width", 2)
           .attr("d", line);
       }
 
-      // Add points (Now drawn AFTER seasonal annotations)
+      // ------------------------------------------------------------------
+      // 3. points
+      // ------------------------------------------------------------------
       svg.selectAll(".current-point")
         .data(currentData)
         .join("circle")
@@ -737,11 +739,11 @@
         .attr("cx", d => x(d.month) + x.bandwidth() / 2)
         .attr("cy", d => y(d.value))
         .attr("r", 4)
-        .attr("fill", categoryColor(category))  // Matches category color
-        .attr("stroke", "#333")                 //  outlines for better visibility
+        .attr("fill", currentColor)            // ← match current line
+        .attr("stroke", "#555")
         .attr("stroke-width", 0.5);
 
-      if (futureData) { // Check the assigned futureData variable
+      if (futureData) {
         svg.selectAll(".future-point")
           .data(futureData)
           .join("circle")
@@ -749,9 +751,40 @@
           .attr("cx", d => x(d.month) + x.bandwidth() / 2)
           .attr("cy", d => y(d.value))
           .attr("r", 4)
-          .attr("fill", "#EA4335");
+          .attr("fill", futureColor);          // ← match future line
       }
 
+      // ------------------------------------------------------------------
+      // 4. legend
+      // ------------------------------------------------------------------
+      const legend = svg.append("g")
+        .attr("transform", `translate(${width - 100}, 0)`);
+
+      legend.append("rect")                    // Current swatch
+        .attr("width", 15)
+        .attr("height", 15)
+        .attr("fill", currentColor);
+
+      legend.append("text")
+        .attr("x", 20)
+        .attr("y", 12)
+        .style("fill", "#555")
+        .text("Current");
+
+      if (futureData) {
+        legend.append("rect")                  // Future swatch
+          .attr("x", 0)
+          .attr("y", 20)
+          .attr("width", 15)
+          .attr("height", 15)
+          .attr("fill", futureColor);
+
+        legend.append("text")
+          .attr("x", 20)
+          .attr("y", 32)
+          .style("fill", "#555")
+          .text("Future");
+      }
       // Add axis labels (can stay here)
       svg.append("text")
         .attr("x", width / 2)
