@@ -241,19 +241,43 @@
         .data(d => d.length ? d : [d])
         .join("rect")
         .attr("class", "bar")
+        // begin of the fade in animation 
         .attr("x", d => x(d.data.label))
-        // Animate Bar Chart:
         .attr("y", y(0))
         .attr("height", 0)
-        .transition()
-        .duration(800)
-        .delay((d, i) => i * 100)
-        .attr("y", d => y(d[1]))
-        .attr("height", d => y(d[0]) - y(d[1]));
         .attr("width", x.bandwidth())
         .attr("stroke", "white")
         .attr("stroke-width", 0.5)
         .attr("data-category", d => d.key)
+        .on("mouseover", function(event, d) {
+          const category = d3.select(this.parentNode).datum().key;
+          const value = (d[1] - d[0]).toFixed(2);
+          tooltip
+            .style("opacity", 1)
+            .html(`<strong>${category}</strong><br>${d.data.label}: ${value} MBtu`);
+        })
+        .on("mousemove", function(event) {
+          tooltip
+            .style("left", (event.pageX + 10) + "px")
+            .style("top", (event.pageY - 28) + "px");
+        })
+        .on("mouseout", function() {
+          tooltip.style("opacity", 0);
+        })
+        .on("click", function(event, d) {
+          const category = this.getAttribute("data-category");
+          showMonthlyTrend(category);
+        })
+        .transition()
+        .duration(800)
+        .delay((d, i) => i * 100)
+        .attr("y", d => y(d[1]))
+        .attr("height", d => y(d[0]) - y(d[1]))
+        // End of the fade-in animation 
+        .attr("width", x.bandwidth())
+        .attr("stroke", "white")
+        .attr("stroke-width", 0.5)
+        .attr("data-category", d => d.key) 
         // insert tooltip handlers 
         .on("mouseover", function(event, d) {
           const category = d3.select(this.parentNode).datum().key;
@@ -680,7 +704,7 @@
         .duration(2000)
         .ease(d3.easeLinear)
         .attr("stroke-dashoffset", 0);
-        
+
       if (futureData) { // Check the assigned futureData variable
         svg.append("path")
           .datum(futureData)
