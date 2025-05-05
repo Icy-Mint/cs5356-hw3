@@ -75,30 +75,81 @@
       overflow: auto;
       border: 1px solid #ddd;
       border-radius: 4px;
+      position: relative; /* For sticky header positioning */
+      background: #fff;
     }
     .csv-preview table {
       width: 100%;
       border-collapse: collapse;
+      min-width: 500px; /* Ensure table doesn't get too compressed */
+      table-layout: fixed; /* Better column width control */
     }
     .csv-preview th, .csv-preview td {
       border: 1px solid #ddd;
       padding: 8px;
       text-align: left;
       font-size: 0.9rem;
+      white-space: nowrap; /* Prevent text wrapping in cells */
+      overflow: hidden;
+      text-overflow: ellipsis; /* Add ellipsis for overflow text */
     }
     .csv-preview th {
       background-color: #f5f5f5;
       position: sticky;
       top: 0;
+      z-index: 1; /* Ensure header stays above content */
     }
     .csv-preview tr:nth-child(even) {
       background-color: #f9f9f9;
+    }
+    .csv-preview td:hover {
+      white-space: normal; /* Show full content on hover */
+      word-break: break-word;
+      position: relative;
+      z-index: 2;
+      background-color: #fff;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    .csv-preview::-webkit-scrollbar {
+      width: 8px;
+      height: 8px;
+    }
+    .csv-preview::-webkit-scrollbar-track {
+      background: #f1f1f1;
+      border-radius: 4px;
+    }
+    .csv-preview::-webkit-scrollbar-thumb {
+      background: #888;
+      border-radius: 4px;
+    }
+    .csv-preview::-webkit-scrollbar-thumb:hover {
+      background: #555;
+    }
+    /* Responsive table container */
+    .table-container {
+      position: relative;
+      width: 100%;
+      overflow: hidden;
+      border-radius: 4px;
+    }
+    /* Scroll indicators */
+    .scroll-indicator {
+      position: absolute;
+      bottom: 0;
+      right: 0;
+      background: rgba(0,0,0,0.1);
+      padding: 4px 8px;
+      font-size: 0.8rem;
+      color: #666;
+      border-radius: 4px 0 0 0;
+      pointer-events: none;
     }
     .format-buttons {
       display: flex;
       justify-content: center;
       gap: 1rem;
       margin: 1.5rem 0;
+      flex-wrap: wrap; /* Allow buttons to wrap on small screens */
     }
     .format-buttons button {
       padding: 10px 15px;
@@ -106,6 +157,7 @@
       background: white;
       cursor: pointer;
       border-radius: 4px;
+      min-width: 100px; /* Ensure buttons don't get too small */
     }
     .format-buttons button.active {
       background: #333;
@@ -154,6 +206,119 @@
     }
     .form-group.full-width {
       grid-column: 1 / -1;
+    }
+
+    /* Responsive Design Styles */
+    @media screen and (max-width: 768px) {
+      .import-container {
+        margin: 1rem;
+        padding: 1rem;
+      }
+      
+      .form-grid {
+        grid-template-columns: 1fr;
+      }
+      
+      .format-buttons {
+        flex-direction: column;
+        align-items: stretch;
+      }
+      
+      .format-buttons button {
+        width: 100%;
+      }
+      
+      .csv-preview {
+        max-height: 250px;
+      }
+      
+      .csv-preview table {
+        font-size: 0.8rem;
+      }
+      
+      .csv-preview th, 
+      .csv-preview td {
+        padding: 6px;
+      }
+
+      /* Mobile table optimizations */
+      .csv-preview td {
+        max-width: 150px; /* Limit cell width on mobile */
+      }
+      
+      .csv-preview td:hover {
+        max-width: none; /* Allow full width on hover */
+      }
+    }
+
+    @media screen and (max-width: 480px) {
+      .import-container {
+        margin: 0.5rem;
+        padding: 0.75rem;
+      }
+      
+      .upload-section {
+        padding: 1rem;
+      }
+      
+      .file-input {
+        padding: 0.75rem;
+      }
+      
+      .submit-btn {
+        padding: 8px 16px;
+        font-size: 0.9rem;
+      }
+      
+      .project-form {
+        padding: 1rem;
+      }
+      
+      .form-group label {
+        font-size: 0.9rem;
+      }
+      
+      .form-group input,
+      .form-group select {
+        font-size: 0.85rem;
+        padding: 6px;
+      }
+
+      /* Small screen table optimizations */
+      .csv-preview {
+        max-height: 200px;
+      }
+      
+      .csv-preview table {
+        font-size: 0.75rem;
+      }
+      
+      .csv-preview th, 
+      .csv-preview td {
+        padding: 4px;
+      }
+      
+      .csv-preview td {
+        max-width: 120px; /* Even smaller max width for very small screens */
+      }
+    }
+
+    /* Ensure horizontal scrolling for tables on mobile */
+    .csv-preview {
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+    }
+
+    /* Add touch-friendly scrolling for mobile */
+    @media (hover: none) {
+      .csv-preview {
+        -webkit-overflow-scrolling: touch;
+        scroll-behavior: smooth;
+      }
+      
+      .csv-preview td:hover {
+        white-space: nowrap; /* Keep text on one line for touch devices */
+      }
     }
   </style>
 </head>
@@ -387,16 +552,15 @@
         const preview = document.getElementById('currentCsvPreview');
         if (file) {
             status.textContent = `${file.name} uploaded successfully.`;
-            status.style.color = '#28a745'; // green
+            status.style.color = '#28a745';
             
             const reader = new FileReader();
             reader.onload = function(e) {
                 const text = e.target.result;
                 let rows = text.split('\n')
                     .map(row => row.split(','))
-                    .filter(row => row.some(cell => cell.trim() !== '')); // Remove rows where all cells are empty
+                    .filter(row => row.some(cell => cell.trim() !== ''));
                 
-                // Remove empty columns
                 if (rows.length > 0) {
                     const columnHasData = rows[0].map((_, colIndex) => 
                         rows.some(row => row[colIndex] && row[colIndex].trim() !== '')
@@ -406,6 +570,9 @@
                         row.filter((_, colIndex) => columnHasData[colIndex])
                     );
                 }
+                
+                const tableContainer = document.createElement('div');
+                tableContainer.className = 'table-container';
                 
                 const table = document.createElement('table');
                 
@@ -433,8 +600,16 @@
                 }
                 table.appendChild(tbody);
                 
+                // Add scroll indicator
+                const scrollIndicator = document.createElement('div');
+                scrollIndicator.className = 'scroll-indicator';
+                scrollIndicator.textContent = 'Scroll to see more →';
+                
+                tableContainer.appendChild(table);
+                tableContainer.appendChild(scrollIndicator);
+                
                 preview.innerHTML = '';
-                preview.appendChild(table);
+                preview.appendChild(tableContainer);
             };
             reader.readAsText(file);
         } else {
@@ -450,16 +625,15 @@
         const preview = document.getElementById('futureCsvPreview');
         if (file) {
             status.textContent = `${file.name} uploaded successfully.`;
-            status.style.color = '#28a745'; // green
+            status.style.color = '#28a745';
             
             const reader = new FileReader();
             reader.onload = function(e) {
                 const text = e.target.result;
                 let rows = text.split('\n')
                     .map(row => row.split(','))
-                    .filter(row => row.some(cell => cell.trim() !== '')); // Remove rows where all cells are empty
+                    .filter(row => row.some(cell => cell.trim() !== ''));
                 
-                // Remove empty columns
                 if (rows.length > 0) {
                     const columnHasData = rows[0].map((_, colIndex) => 
                         rows.some(row => row[colIndex] && row[colIndex].trim() !== '')
@@ -469,6 +643,9 @@
                         row.filter((_, colIndex) => columnHasData[colIndex])
                     );
                 }
+                
+                const tableContainer = document.createElement('div');
+                tableContainer.className = 'table-container';
                 
                 const table = document.createElement('table');
                 
@@ -496,8 +673,16 @@
                 }
                 table.appendChild(tbody);
                 
+                // Add scroll indicator
+                const scrollIndicator = document.createElement('div');
+                scrollIndicator.className = 'scroll-indicator';
+                scrollIndicator.textContent = 'Scroll to see more →';
+                
+                tableContainer.appendChild(table);
+                tableContainer.appendChild(scrollIndicator);
+                
                 preview.innerHTML = '';
-                preview.appendChild(table);
+                preview.appendChild(tableContainer);
             };
             reader.readAsText(file);
         } else {
