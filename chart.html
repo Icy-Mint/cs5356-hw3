@@ -243,76 +243,51 @@
       svg.selectAll("g.layer")
         .data(stackedData)
         .join("g")
-        .attr("class", d => `layer category-${d.key.replace(/\s+\([^)]+\)/g, '').replace(/\s+/g, '-').toLowerCase()}`)
-        .attr("fill", d => colorScale(d.key))
+          .attr("class", d => `layer category-${d.key.replace(/\s+\([^)]+\)/g, '').replace(/\s+/g, '-').toLowerCase()}`)
+          .attr("fill", d => colorScale(d.key))
         .selectAll("rect")
-        .data(d => d.length ? d : [d])
-        .join("rect")
-        .attr("class", "bar")
-        // begin of the fade in animation 
-        .attr("x", d => x(d.data.label))
-        .attr("y", y(0))
-        .attr("height", 0)
-        .attr("width", x.bandwidth())
-        .attr("stroke", "white")
-        .attr("stroke-width", 0.5)
-        .attr("data-category", d => d.key)
-        .on("mouseover", function(event, d) {
-          const category = d3.select(this.parentNode).datum().key;
-          const value = (d[1] - d[0]).toFixed(2);
-          tooltip
-            .style("opacity", 1)
-            .html(`<strong>${category}</strong><br>${d.data.label}: ${value} MBtu`);
-        })
-        .on("mousemove", function(event) {
-          tooltip
-            .style("left", (event.pageX + 10) + "px")
-            .style("top", (event.pageY - 28) + "px");
-        })
-        .on("mouseout", function() {
-          tooltip.style("opacity", 0);
-        })
-        .on("click", function(event, d) {
-          const category = this.getAttribute("data-category");
-          showMonthlyTrend(category);
-        })
-        .transition()
-        .duration(800)
-        .delay((d, i) => i * 100)
-        .attr("y", d => y(d[1]))
-        .attr("height", d => y(d[0]) - y(d[1]))
-        // End of the fade-in animation 
-        .attr("width", x.bandwidth())
-        .attr("stroke", "white")
-        .attr("stroke-width", 0.5)
-        .attr("data-category", d => d.key) 
-        // insert tooltip handlers 
-        .on("mouseover", function(event, d) {
-          const category = d3.select(this.parentNode).datum().key;
-          const value = (d[1] - d[0]).toFixed(2);
-          tooltip
-            .style("opacity", 1)
-            .html(`<strong>${category}</strong><br>${d.data.label}: ${value} MBtu`);
-        })
-        .on("mousemove", function(event) {
-          tooltip
-            .style("left", (event.pageX + 10) + "px")
-            .style("top", (event.pageY - 28) + "px");
-        })
-        .on("mouseout", function() {
-          tooltip.style("opacity", 0);
-        })
+          .data(d => d.length ? d : [d])
+          .join("rect")
+            .attr("class", "bar")
+      // begin of the fade in animation 
+            .attr("x",      d => x(d.data.label))
+            .attr("y",      y(0))                               /* start at baseline for the animation  */
+            .attr("width",  x.bandwidth())
+            .attr("height", 0)
+            .attr("stroke", "white")
+            .attr("stroke-width", 0.5)
+            /* store the category so click‑handler is trivial             */
+            .attr("data-category", (d,i,nodes) =>
+              d3.select(nodes[i].parentNode).datum().key)       /* ← CHANGED   */
 
-        .on("click", function(event, d) {
-          const category = this.getAttribute("data-category");
-          showMonthlyTrend(category);
-        })
+            /* ─── interaction handlers BEFORE the transition ─────────── */
+            .on("mouseover", (event, d) => {
+              const category = d3.select(event.currentTarget.parentNode).datum().key;
+              const val      = (d[1] - d[0]).toFixed(2);
+              tooltip.style("opacity", 1)
+                    .html(`<strong>${category}</strong><br>${d.data.label}: ${val}&nbsp;MBtu`);
+            })
+            .on("mousemove",  event =>
+              tooltip.style("left", (event.pageX + 10) + "px")
+                    .style("top",  (event.pageY - 28) + "px"))
+            .on("mouseout",   () => tooltip.style("opacity", 0))
+            .on("click",      event =>
+              showMonthlyTrend(event.currentTarget.dataset.category))
+
+            /* ─── grow‑in animation ───────────────────────────────────── */
+            .transition()
+            .duration(800)
+            .delay((d,i) => i * 100)
+            .attr("y",      d => y(d[1]))
+            .attr("height", d => y(d[0]) - y(d[1]))
+
+        /* ─── optional native <title> tooltip AFTER the transition ───── */
+        .selection()                                            /* ← CHANGED   jump back to the rect selection              */
         .append("title")
-        .text(d => {
-          const category = d.key;
-          const value = (d[1] - d[0]).toFixed(2);
-          return `${d.data.label} - ${category}: ${value} MBtu`;
-        });
+          .text(function(d){
+              const category = d3.select(this.parentNode).datum().key;
+              return `${d.data.label} – ${category}: ${(d[1]-d[0]).toFixed(2)} MBtu`;
+          });
         
       // Add axes
       svg.append("g")
