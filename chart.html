@@ -456,7 +456,7 @@
       svg.selectAll(".label")
         .style("font-size", "11px")    // ← Set uniform readable size
         .style("fill", "#333")         // ← Changed for contrast
-        .style("font-weight", "500");  // ← Added for better legibility
+        .style("font-weight", "500")  // ← Added for better legibility
         .data(arcData)
         .join("text")
         .attr("transform", d => `translate(${arc.centroid(d)})`)
