@@ -67,9 +67,8 @@
      onmouseout="this.style.textDecoration='none'">← Back to Previous Page</a>
 
   <h2>Energy Visualization Dashboard</h2>
-  
-
-  
+  <!--  Tooltip container for hover display -->
+  <div id="tooltip" style="position: absolute; opacity: 0; background: #fff; padding: 6px 10px; border: 1px solid #ccc; border-radius: 4px; pointer-events: none; font-size: 12px;"></div> 
   <div class="chart-container">
     <div id="annual-chart">
       <div class="chart-title">Annual Energy Comparison</div>
@@ -86,6 +85,7 @@
     // Load data from local storage
     const rawCsvCurrent = localStorage.getItem("iesveCsvData");
     const rawCsvFuture = localStorage.getItem("iesveFutureCsvData");
+    const tooltip = d3.select("#tooltip"); // This line initializes the tooltip reference
 
     if (!rawCsvCurrent) {
       document.body.innerHTML = "<p>No current energy CSV found. Please upload it first.</p>";
@@ -242,12 +242,35 @@
         .join("rect")
         .attr("class", "bar")
         .attr("x", d => x(d.data.label))
+        // Animate Bar Chart:
+        .attr("y", y(0))
+        .attr("height", 0)
+        .transition()
+        .duration(800)
+        .delay((d, i) => i * 100)
         .attr("y", d => y(d[1]))
-        .attr("height", d => Math.max(0, y(d[0]) - y(d[1]))) 
+        .attr("height", d => y(d[0]) - y(d[1]));
         .attr("width", x.bandwidth())
         .attr("stroke", "white")
         .attr("stroke-width", 0.5)
         .attr("data-category", d => d.key)
+        // insert tooltip handlers 
+        .on("mouseover", function(event, d) {
+          const category = d3.select(this.parentNode).datum().key;
+          const value = (d[1] - d[0]).toFixed(2);
+          tooltip
+            .style("opacity", 1)
+            .html(`<strong>${category}</strong><br>${d.data.label}: ${value} MBtu`);
+        })
+        .on("mousemove", function(event) {
+          tooltip
+            .style("left", (event.pageX + 10) + "px")
+            .style("top", (event.pageY - 28) + "px");
+        })
+        .on("mouseout", function() {
+          tooltip.style("opacity", 0);
+        })
+
         .on("click", function(event, d) {
           const category = this.getAttribute("data-category");
           showMonthlyTrend(category);
@@ -615,7 +638,8 @@
       // Create line generators (can stay here)
       const line = d3.line()
         .x(d => x(d.month) + x.bandwidth() / 2)
-        .y(d => y(d.value));
+        .y(d => y(d.value))
+        .curve(d3.curveBasis); // Apply curveBasis for smooth lines
 
       // Add axes (Now drawn AFTER seasonal annotations)
       svg.append("g")
